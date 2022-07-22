@@ -9,14 +9,14 @@ export default class EntityContainer {
     return this.entityComponents[id]
   }
 
-  public getComponents = (componentClass: Function | string): Component[] => {
+  public getComponents = (componentType: Function | string): Component[] => {
     let name: string =
-      componentClass instanceof Function ? componentClass.name : componentClass
+      componentType instanceof Function ? componentType.name : componentType
 
     return this.components[name]
   }
 
-  public createEntity = (components: Component[]): string => {
+  public createEntity = (components: Component[]): Entity => {
     let newId: string = this.generatenNewId()
 
     components.forEach((component: Component) => {
@@ -25,11 +25,26 @@ export default class EntityContainer {
     })
     this.entityComponents[newId] = components
 
-    return newId
+    return new Entity(components, newId)
   }
 
-  public addEnttity = () => {
-    
+  public addEnttity = (entity: Entity) => {
+    if (entity.getId() === undefined) {
+      entity.setId(this.generatenNewId())
+    }
+
+    let id: string | undefined = entity.getId()
+
+    if(typeof id == 'string'){
+    entity.getComponents().forEach((component: Component) => {
+      if (typeof id === 'string') {
+        component.setEntityId(id)
+        this.addComponent(component)
+      }
+    })
+
+    this.entityComponents[id] = entity.getComponents()
+    }
   }
 
   public addComponent = (component: Component) => {
