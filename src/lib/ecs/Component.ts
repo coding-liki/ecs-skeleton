@@ -1,9 +1,8 @@
 export default class Component {
-  private entityId: string = '';
+  private entityId: string = ''
 
-
-  public setEntityId = (entityId: string) => {
-    this.entityId = entityId
+  public setEntityId = (entityId?: string) => {
+    this.entityId = entityId ?? ''
   }
 
   public getEntityId = (): string => {
@@ -11,6 +10,6 @@ export default class Component {
   }
 
   public getType = (): string => {
-    return this.constructor.name;
-  };
+    return this.constructor.name
+  }
 }
