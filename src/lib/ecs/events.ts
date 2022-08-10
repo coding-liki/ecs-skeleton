@@ -1,28 +1,31 @@
 import { Event } from '@coding-liki/event-manager'
-import Component from './Component'
+import { ComponentInterface } from './Component'
 
 export class AddComponentEvent extends Event {
-  private component: Component
+  private component: ComponentInterface
 
-  public constructor(component: Component) {
+  public constructor(component: ComponentInterface) {
     super()
     this.component = component
   }
 
-  public getComponent = (): Component => {
+  public getComponent = (): ComponentInterface => {
     return this.component
   }
 }
 
 export class RemoveComponentEvent extends Event {
-  private component: Component
+  private component: ComponentInterface
 
-  public constructor(component: Component) {
+  public constructor(component: ComponentInterface) {
     super()
     this.component = component
   }
 
-  public getComponent = (): Component => {
+  public getComponent = (): ComponentInterface => {
     return this.component
   }
 }
+
+
+export class RerenderEvent extends Event{}

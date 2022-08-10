@@ -1,14 +1,18 @@
 import { EventManager } from '@coding-liki/event-manager'
-import Component from './Component'
+import { uuid } from 'uuidv4';
+import Component, { ComponentInterface } from './Component'
 import Entity from './Entity'
+import { AddComponentEvent, RemoveComponentEvent } from './events'
+
+type ComponentOrAny = Component|any;
 
 export default class EntityContainer {
   public static EVENT_MANAGER_NAME = 'ecs-event-manager'
 
-  private components: { [key: string]: Component[] } = {}
-  private entityComponents: { [key: string]: Component[] } = {}
+  private components: { [key: string]: ComponentInterface[] } = {}
+  private entityComponents: { [key: string]: ComponentInterface [] } = {}
   private eventManager: EventManager
-
+  
   private containerPrefix: string
 
   public constructor(containerPrefix: string = '') {
@@ -18,25 +22,29 @@ export default class EntityContainer {
       this.containerPrefix + EntityContainer.EVENT_MANAGER_NAME
     )
   }
+  
+  public getEventManager = (): EventManager => {
+    return this.eventManager;
+  }
+
   public getContainerPrefix = (): string => {
     return this.containerPrefix
   }
 
-  public getEntityComponents = (id: string): Component[] => {
-    return this.entityComponents[id]
+  public getEntityComponents = <ComponentType extends ComponentInterface = Component>(id: string, componentType: Function = Component): ComponentType[] => {
+    return this.entityComponents[id].filter((component: ComponentInterface) => {
+      return component instanceof componentType;
+    });
   }
 
-  public getComponents = (componentType: Function | string): Component[] => {
-    let type: string =
-      componentType instanceof Function ? componentType.name : componentType
-
-    return this.components[type]
+  public getComponents = <ComponentType extends ComponentInterface = Component>(componentType: Function = Component): ComponentType[] => {
+    return this.components[componentType.name] ? this.components[componentType.name] : [];
   }
 
-  public createEntity = (components: Component[]): Entity => {
+  public createEntity = (components: ComponentInterface[]): Entity => {
     let newId: string = this.generatenNewId()
 
-    components.forEach((component: Component) => {
+    components.forEach((component: ComponentInterface) => {
       component.setEntityId(newId)
       this.addComponent(component)
     })
@@ -49,7 +57,7 @@ export default class EntityContainer {
     entity.setId(id)
   }
 
-  public addComponent = (component: Component) => {
+  public addComponent = (component: ComponentInterface) => {
     let type: string = component.getType()
 
     if (!this.components[type]) {
@@ -58,6 +66,7 @@ export default class EntityContainer {
 
     if (!this.components[type].includes(component)) {
       this.components[type].push(component)
+      this.eventManager.dispatch(new AddComponentEvent(component));
     }
 
     if (!this.entityComponents[component.getEntityId()]) {
@@ -69,18 +78,19 @@ export default class EntityContainer {
     }
   }
 
-  public removeComponent = (component: Component) => {
+  public removeComponent = (component: ComponentInterface) => {
     let type: string = component.getType()
 
     if (this.components[type] && this.components[type].includes(component)) {
       let index = this.components[type].indexOf(component)
       if (index > -1) {
-        this.components[type].splice(index, 1)
+        this.components[type].splice(index, 1);
+        this.eventManager.dispatch(new RemoveComponentEvent(component));
       }
     }
   }
 
   private generatenNewId = (): string => {
-    return Date.now().toString(36)
+    return uuid()
   }
 }
