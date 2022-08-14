@@ -1,21 +1,19 @@
 import EntityContainer from "./EntityContainer";
 
-export default class ComponentSystem{
+export default class ComponentSystem {
   protected entityContainer: EntityContainer;
 
-  public constructor(entityContainer: EntityContainer){
+  public constructor(entityContainer: EntityContainer) {
     this.entityContainer = entityContainer;
   }
-  render = (): React.ReactNode => {
+
+  render(): React.ReactNode {
     return;
   }
 
-  public onMount(){
-
+  public onMount(): void {
   }
 
-  public onUnMount(){
-
+  public onUnMount(): void {
   }
-
 }

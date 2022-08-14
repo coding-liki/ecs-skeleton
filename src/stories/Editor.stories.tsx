@@ -2,10 +2,15 @@ import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { SvgEditor } from '../components';
 import { AddComponentEvent, Component, ComponentSystem, EntityContainer, RerenderEvent } from '../lib';
+import { FixCameraOnWindowResize } from '../systems';
 
 export default {
   title: 'Editor/SvgEditor',
   component: SvgEditor,
+  parameters: {
+    // More on Story layout: https://storybook.js.org/docs/react/configure/story-layout
+    layout: 'fullscreen',
+  },
 } as ComponentMeta<typeof SvgEditor>;
 
 
@@ -14,7 +19,9 @@ const Template: ComponentStory<typeof SvgEditor> = (args) => <SvgEditor {...args
 
 
 
-export const NoThings = Template.bind({});
+export const OnlySimpleRender = Template.bind({});
+
+export const RenderAndWindowResize = Template.bind({});
 
 let entityContainer = new EntityContainer();
 
@@ -63,11 +70,11 @@ class RenderCircle extends ComponentSystem{
     return  drawFlags.map(this.drawCircle);
   };
 
-  drawCircle = (flag: DrawCircle): React.ReactNode => {
-    let position = this.entityContainer.getEntityComponents<Position>(flag.getEntityId(), Position)[0];
-    let radius  = this.entityContainer.getEntityComponents<Radius>(flag.getEntityId(), Radius)[0];
-    let color    = this.entityContainer.getEntityComponents<Color>(flag.getEntityId(), Color)[0];
-    return <circle cx={position.x} cy={position.y} r={radius.radius}  fill={color.fill}/>
+  drawCircle = (flag: DrawCircle, key: number): React.ReactNode => {
+    let position = this.entityContainer.getComponentsByEntityId<Position>(flag.getEntityId(), Position)[0];
+    let radius  = this.entityContainer.getComponentsByEntityId<Radius>(flag.getEntityId(), Radius)[0];
+    let color    = this.entityContainer.getComponentsByEntityId<Color>(flag.getEntityId(), Color)[0];
+    return <circle cx={position.x} cy={position.y} r={radius.radius}  fill={color.fill} key={key} />
   }
 }
 
@@ -78,9 +85,11 @@ function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
- function addCircles(){
-  for(let i = 0; i< 100; i++){
-    //await sleep(200);
+ async function addCircles(){
+  await sleep(1000);
+
+  for(let i = 0; i< 1000; i++){
+    // await sleep(200);
     let position = new Position;
     position.x = Math.random()*500;
     position.y = Math.random()*500;
@@ -107,18 +116,18 @@ async function updateLoop() {
 
     while(1){
     await sleep(1000);
-    
-    entityContainer.getEventManager().dispatch(new RerenderEvent);
+      entityContainer.getEventManager().dispatch(new RerenderEvent);
     }
 }
 
-NoThings.args = {
+
+RenderAndWindowResize.args = {
   entityContainer: entityContainer,
   systems: [
-    new RenderCircle(entityContainer)
+    new FixCameraOnWindowResize(entityContainer),
+    new RenderCircle(entityContainer),
   ]
 }
 
-addCircles();
 
-updateLoop();
+addCircles();
