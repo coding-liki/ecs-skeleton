@@ -2,7 +2,8 @@ import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { SvgEditor } from '../components';
 import { AddComponentEvent, Component, ComponentSystem, EntityContainer, RerenderEvent } from '../lib';
-import { FixCameraOnWindowResize } from '../systems';
+import { FixCameraOnWindowResize, MousePositionCapture } from '../systems';
+import ZoomOnWheel from '../systems/Editor/ZoomOnWheel';
 
 export default {
   title: 'Editor/SvgEditor',
@@ -22,6 +23,7 @@ const Template: ComponentStory<typeof SvgEditor> = (args) => <SvgEditor {...args
 export const OnlySimpleRender = Template.bind({});
 
 export const RenderAndWindowResize = Template.bind({});
+export const RenderAndWindowResizeAndZoom = Template.bind({});
 
 let entityContainer = new EntityContainer();
 
@@ -120,6 +122,12 @@ async function updateLoop() {
     }
 }
 
+OnlySimpleRender.args = {
+  entityContainer: entityContainer,
+  systems: [
+    new RenderCircle(entityContainer),
+  ]
+}
 
 RenderAndWindowResize.args = {
   entityContainer: entityContainer,
@@ -129,5 +137,14 @@ RenderAndWindowResize.args = {
   ]
 }
 
+RenderAndWindowResizeAndZoom.args = {
+  entityContainer: entityContainer,
+  systems: [
+    new FixCameraOnWindowResize(entityContainer),
+    new RenderCircle(entityContainer),
+    new ZoomOnWheel(entityContainer),
+    new MousePositionCapture(entityContainer),
+  ]
+}
 
 addCircles();

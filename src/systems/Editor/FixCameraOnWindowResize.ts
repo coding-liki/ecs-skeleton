@@ -1,6 +1,5 @@
-import CameraComponent from "../../components/Editor/CameraComponent";
+import { CameraComponent, SvgNodeComponent } from "../../components";
 import { MAIN_CAMERA } from "../../components/Editor/constants";
-import SvgNodeComponent from "../../components/Editor/SvgNodeComponent";
 import { Camera, ComponentSystem, RerenderEvent, Vector, Viewport } from "../../lib";
 
 export default class FixCameraOnWindowResize extends ComponentSystem {
@@ -9,11 +8,10 @@ export default class FixCameraOnWindowResize extends ComponentSystem {
 
     public onMount(): void {
 
-        let cameras = this.entityContainer.getEntitiesByTag(MAIN_CAMERA);
-        let camera = cameras[0];
+        let camera = this.entityContainer.getEntityByTag(MAIN_CAMERA);
 
-        this.svgNodeComponent = this.entityContainer.getEntityComponent<SvgNodeComponent>(camera, SvgNodeComponent);
-        this.cameraComponent = this.entityContainer.getEntityComponent<CameraComponent>(camera, CameraComponent);
+        this.svgNodeComponent = this.entityContainer.getEntityComponent<SvgNodeComponent>(camera!, SvgNodeComponent);
+        this.cameraComponent = this.entityContainer.getEntityComponent<CameraComponent>(camera!, CameraComponent);
 
         window.onresize = () => {
             this.onWindowResize();

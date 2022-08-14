@@ -1,8 +1,8 @@
 import React, { Fragment, RefObject } from 'react'
 import { Camera, ComponentSystem, Entity, EntityContainer, RerenderEvent, Vector, Viewport } from '../../lib'
-import CameraComponent from './CameraComponent'
-import { MAIN_CAMERA } from './constants'
-import SvgNodeComponent from './SvgNodeComponent'
+import { MousePositionCapture } from '../../systems'
+import { CameraComponent, MouseEventComponent, MousePositionComponent, SvgNodeComponent } from './components'
+import { MAIN_CAMERA, MAIN_MOUSE } from './constants'
 
 type Props = {
   entityContainer: EntityContainer,
@@ -24,14 +24,32 @@ export default class SvgEditor extends React.Component<Props, State> {
   init = () => {
     this.cameraComponent.camera = new Camera(new Vector(250, 250, -1), new Viewport(new Vector(0, 0), new Vector(500, 500)));
 
+    this.refillCameraEntity()
+
+    this.refillMouseEntity()
+    
+  }
+
+  private refillMouseEntity() {
+    this.props.entityContainer.getEntitiesByTag(MAIN_MOUSE).forEach(mouse => {
+      this.props.entityContainer.removeEntity(mouse)
+    })
+
+    this.props.entityContainer.createEntity([
+      new MousePositionComponent,
+      new MouseEventComponent,
+    ], [MAIN_MOUSE])
+  }
+
+  private refillCameraEntity() {
     this.props.entityContainer.getEntitiesByTag(MAIN_CAMERA).forEach(camera => {
-      this.props.entityContainer.removeEntity(camera);
-    });
+      this.props.entityContainer.removeEntity(camera)
+    })
 
     this.cameraEntity = this.props.entityContainer.createEntity([
       this.cameraComponent,
       this.svgNodeComponent
-    ], [MAIN_CAMERA]);
+    ], [MAIN_CAMERA])
   }
 
   componentDidMount() {

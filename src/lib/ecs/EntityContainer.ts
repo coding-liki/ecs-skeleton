@@ -46,12 +46,12 @@ export default class EntityContainer {
   }
 
   public getEntityComponents<ComponentType extends ComponentInterface = Component>(entity: Entity, componentType: Function = Component): ComponentType[] {
-      return this.getComponentsByEntityId<ComponentType>(entity.getId(), componentType);
+    return this.getComponentsByEntityId<ComponentType>(entity.getId(), componentType);
   }
 
   public getEntityComponent<ComponentType extends ComponentInterface = Component>(entity: Entity, componentType: Function = Component): ComponentType | undefined {
     let components = this.getComponentsByEntityId<ComponentType>(entity.getId(), componentType);
-    return components[0]; 
+    return components[0];
   }
 
   public getComponents<ComponentType extends ComponentInterface = Component>(componentType: Function = Component): ComponentType[] {
@@ -144,6 +144,10 @@ export default class EntityContainer {
     return this.taggedEntities[tag] ? this.taggedEntities[tag] : [];
   }
 
+  public getEntityByTag(tag: string): Entity | undefined {
+    return this.getEntitiesByTag(tag)[0];
+  }
+  
   private generatenNewId(): string {
     return v4()
   }
