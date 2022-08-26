@@ -28,4 +28,54 @@ export class RemoveComponentEvent extends Event {
 }
 
 
-export class RerenderEvent extends Event{}
+export class RerenderEvent extends Event { }
+export class FullRerenderEvent extends Event { }
+export class EndedRenderEvent extends Event { }
+
+export class TurnOnSystemByName extends Event {
+  private name: string
+  constructor(name: string) {
+    super();
+    this.name = name
+  }
+
+  public getName(): string {
+    return this.name;
+  }
+}
+
+export class TurnOffSystemByName extends Event {
+  private name: string
+  constructor(name: string) {
+    super();
+    this.name = name
+  }
+
+  public getName(): string {
+    return this.name;
+  }
+}
+
+export class TurnOnSystemByClass extends Event {
+  private className: Function
+  constructor(className: Function) {
+    super();
+    this.className = className
+  }
+
+  public getClassName(): Function {
+    return this.className;
+  }
+}
+
+export class TurnOffSystemByClass extends Event {
+  private className: Function
+  constructor(className: Function) {
+    super();
+    this.className = className
+  }
+
+  public getClassName(): Function {
+    return this.className;
+  }
+}

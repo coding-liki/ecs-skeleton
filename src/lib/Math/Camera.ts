@@ -1,5 +1,5 @@
 import {Vector} from "./Vector";
-import {Viewport} from "./Viewport";
+import {Viewbox} from "./Viewbox";
 
 export interface WithPosition{
     position: Vector;
@@ -9,12 +9,12 @@ export class Camera implements WithPosition{
     position: Vector;
     initPosition: Vector;
 
-    initViewPort: Viewport;
+    initViewBox: Viewbox;
 
-    constructor(position: Vector, viewPort: Viewport, initPosition?: Vector) {
+    constructor(position: Vector, viewBox: Viewbox, initPosition?: Vector) {
         this.position = position;
         this.initPosition = initPosition ? initPosition : position.clone();
-        this.initViewPort = viewPort;
+        this.initViewBox = viewBox;
     }
 
     zoom(zoomPoint: Vector, percent: number): Camera {
@@ -39,13 +39,13 @@ export class Camera implements WithPosition{
         return this;
     }
 
-    getViewPort(): Viewport {
+    get2DViewBox(): Viewbox {
         let diff = this.position.z/this.initPosition.z;
-        let newDimensions = this.initViewPort.dimensions.clone().mul(diff);
+        let newDimensions = this.initViewBox.dimensions.clone().mul(diff);
         let newPosition = this.position.clone().sub(newDimensions.clone().div(2));
         newPosition.z = 0;
 
-        return new Viewport(newPosition, newDimensions );
+        return new Viewbox(newPosition, newDimensions );
     }
 
 }

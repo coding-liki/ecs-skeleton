@@ -1,17 +1,17 @@
 import { Vector } from "./Vector";
 
 
-export class Viewport {
-    position: Vector;
+export class Viewbox {
+    public position: Vector;
 
-    dimensions: Vector;
+    public dimensions: Vector;
 
     constructor(position: Vector, dimensions: Vector) {
         this.position = position;
         this.dimensions = dimensions;
     }
 
-    toString(): string {
+    public toString(): string {
         return this.position.x + ", " + this.position.y + ", " + this.dimensions.x + ", " + this.dimensions.y;
     }
 }

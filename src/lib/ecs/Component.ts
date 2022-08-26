@@ -9,7 +9,7 @@ export default class Component implements ComponentInterface {
     return this;
   }
 
-  public getEntityId = (): string => {
+  public getEntityId (): string {
     return this.entityId
   }
 

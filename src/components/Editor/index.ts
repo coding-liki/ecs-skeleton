@@ -1,3 +1,3 @@
-export {default as SvgEditor} from './SvgEditor';
+export {default as EcsEditor} from './EcsEditor';
 export * from './components';
 export * from './constants';

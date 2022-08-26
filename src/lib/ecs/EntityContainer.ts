@@ -45,6 +45,10 @@ export default class EntityContainer {
     }) as ComponentType[];
   }
 
+  public getComponentByEntityId<ComponentType extends ComponentInterface = Component>(id?: string, componentType: Function = Component): ComponentType | undefined {
+    return this.getComponentsByEntityId<ComponentType>(id, componentType)[0];
+  }
+
   public getEntityComponents<ComponentType extends ComponentInterface = Component>(entity: Entity, componentType: Function = Component): ComponentType[] {
     return this.getComponentsByEntityId<ComponentType>(entity.getId(), componentType);
   }
@@ -97,7 +101,7 @@ export default class EntityContainer {
 
     if (!this.components[type].includes(component)) {
       this.components[type].push(component)
-      this.eventManager.dispatch(new AddComponentEvent(component));
+      setTimeout(() => this.eventManager.dispatch(new AddComponentEvent(component)));
     }
 
     if (!this.entityComponents[component.getEntityId()]) {
@@ -139,7 +143,9 @@ export default class EntityContainer {
     });
 
   }
+  // public getEntityById(id: string): Entity | undefined {
 
+  // }
   public getEntitiesByTag(tag: string): Entity[] {
     return this.taggedEntities[tag] ? this.taggedEntities[tag] : [];
   }
@@ -147,7 +153,12 @@ export default class EntityContainer {
   public getEntityByTag(tag: string): Entity | undefined {
     return this.getEntitiesByTag(tag)[0];
   }
-  
+
+  public removeEntitiesWithTag(tag: string): void {
+    this.getEntitiesByTag(tag).forEach(canvas => {
+      this.removeEntity(canvas)
+    })
+  }
   private generatenNewId(): string {
     return v4()
   }

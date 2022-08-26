@@ -1,22 +1,21 @@
-import { CameraComponent, MAIN_CAMERA, MAIN_MOUSE, MouseEventComponent, MousePositionComponent, SvgNodeComponent } from "../../components";
-import { ComponentSystem, RerenderEvent } from "../../lib";
+import { CameraComponent, MAIN_CAMERA, MAIN_MOUSE, MouseEventComponent, MousePositionComponent, HtmlElementComponent } from "../../components";
+import { RerenderEvent } from "../../lib";
+import ComponentSystem from "../../lib/ecs/ComponentSystem";
 
 export default class ZoomOnWheel extends ComponentSystem {
-    cameraComponent?: CameraComponent;
-    svgNodeComponent?: SvgNodeComponent;
+    cameraComponent: CameraComponent = new CameraComponent;
+    htmlElementComponent: HtmlElementComponent = new HtmlElementComponent;
 
-    mousePositionComponent?: MousePositionComponent;
+    mousePositionComponent: MousePositionComponent = new MousePositionComponent;
 
     public onMount(): void {
 
         let camera = this.entityContainer.getEntityByTag(MAIN_CAMERA);
         let mouse = this.entityContainer.getEntityByTag(MAIN_MOUSE);
 
-        this.svgNodeComponent = this.entityContainer.getEntityComponent<SvgNodeComponent>(camera!, SvgNodeComponent);
-        this.cameraComponent = this.entityContainer.getEntityComponent<CameraComponent>(camera!, CameraComponent);
-
-
-        this.mousePositionComponent = this.entityContainer.getEntityComponent<MousePositionComponent>(mouse!, MousePositionComponent);
+        this.htmlElementComponent = this.entityContainer.getEntityComponent<HtmlElementComponent>(camera!, HtmlElementComponent)!;
+        this.cameraComponent = this.entityContainer.getEntityComponent<CameraComponent>(camera!, CameraComponent)!;
+        this.mousePositionComponent = this.entityContainer.getEntityComponent<MousePositionComponent>(mouse!, MousePositionComponent)!;
 
         this.addWheelHandler();
     }
@@ -26,23 +25,28 @@ export default class ZoomOnWheel extends ComponentSystem {
     }
 
     private addWheelHandler = () => {
-        if (!this.svgNodeComponent || !this.svgNodeComponent.svgNode) {
+        if (!this.htmlElementComponent.element) {
             setTimeout(this.addWheelHandler);
             return;
         }
 
-        this.svgNodeComponent!.svgNode!.addEventListener('wheel', this.onWheel)
+        this.htmlElementComponent.element.addEventListener('wheel', this.onWheel)
     }
 
     private removeWheelHandler() {
-        this.svgNodeComponent!.svgNode!.removeEventListener('wheel', this.onWheel)
+        if (!this.htmlElementComponent.element) {
+            return;
+        }
+        this.htmlElementComponent.element.removeEventListener('wheel', this.onWheel)
     }
 
     private onWheel = (event: WheelEvent) => {
-        console.log("Wheeel");
+        if (!this.cameraComponent.camera || !this.mousePositionComponent.position) {
+            return;
+        }
 
         let delta = event.deltaY * (-0.0015);
-        this.cameraComponent?.camera?.zoom(this!.mousePositionComponent!.position, delta);
+        this.cameraComponent.camera.zoom(this.mousePositionComponent.position, delta);
         this.entityContainer.getEventManager().dispatch(new RerenderEvent);
     }
 

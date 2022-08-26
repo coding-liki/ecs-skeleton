@@ -1,5 +1,7 @@
 export { default as Component } from './Component'
 export { default as Entity } from './Entity'
 export { default as EntityContainer } from './EntityContainer'
+export { default as SystemContainer } from './SystemContainer'
 export { default as ComponentSystem } from './ComponentSystem'
 export * from './events'
+export * from './interfaces'
