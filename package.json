@@ -3,7 +3,7 @@
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/coding-liki"
   },
-  "version": "1.0.3",
+  "version": "1.0.5",
   "main": "dist/cjs/index.js",
   "scripts": {
     "rollup": "rollup -c",
@@ -57,10 +57,9 @@
   "dependencies": {
     "@coding-liki/event-manager": "^1.0.3",
     "@mdx-js/react": "^2.1.2",
+    "nanoid": "^4.0.0",
     "storybook": "^6.5.10",
-    "tslib": "^2.4.0",
-    "uuidv4": "^6.2.13"
+    "tslib": "^2.4.0"
   },
-  "description": "A simple skeleton for editors, based on ECS(Entity Component System) System.",
-  "browser": { "crypto": false }
+  "description": "A simple skeleton for editors, based on ECS(Entity Component System) System."
 }
