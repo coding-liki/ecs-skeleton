@@ -1,5 +1,4 @@
 import { EventManager } from '@coding-liki/event-manager'
-import { nanoid } from 'nanoid';
 import Component, { ComponentInterface } from './Component'
 import Entity from './Entity'
 import { AddComponentEvent, RemoveComponentEvent } from './events'
@@ -7,6 +6,7 @@ import { AddComponentEvent, RemoveComponentEvent } from './events'
 type ComponentOrAny = Component | any;
 
 export default class EntityContainer {
+  public lastEntityId = 0;
   public id: string;
   public static EVENT_MANAGER_NAME = 'ecs-event-manager'
 
@@ -160,6 +160,7 @@ export default class EntityContainer {
     })
   }
   private generatenNewId(): string {
-    return nanoid(48)
+    this.lastEntityId++;
+    return "Entity_"+this.lastEntityId;
   }
 }

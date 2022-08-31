@@ -3,7 +3,7 @@
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/coding-liki"
   },
-  "version": "1.0.5",
+  "version": "1.0.6",
   "main": "dist/cjs/index.js",
   "scripts": {
     "rollup": "rollup -c",
@@ -57,7 +57,6 @@
   "dependencies": {
     "@coding-liki/event-manager": "^1.0.3",
     "@mdx-js/react": "^2.1.2",
-    "nanoid": "^4.0.0",
     "storybook": "^6.5.10",
     "tslib": "^2.4.0"
   },
