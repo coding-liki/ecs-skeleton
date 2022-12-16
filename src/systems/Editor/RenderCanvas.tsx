@@ -11,7 +11,6 @@ export default class RenderCanvas extends ComponentSystem {
         let camera = this.entityContainer.getEntityByTag(MAIN_CAMERA);
         
         this.cameraComponent = this.entityContainer.getEntityComponent<CameraComponent>(camera!, CameraComponent)!;
-        console.log("refill");
 
         this.refillCanvas();
     }
@@ -22,13 +21,10 @@ export default class RenderCanvas extends ComponentSystem {
         this.entityContainer.createEntity([
             this.canvasComnponent
         ], [MAIN_CANVAS]);
-
-
     }
     reactRender = (): ReactNode => {
         if(!this.cameraComponent.camera){
-            console.log("No camera");
-            
+
             return ;
         }
         

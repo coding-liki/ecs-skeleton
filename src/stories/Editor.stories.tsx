@@ -1,372 +1,429 @@
 import React from 'react'
-import { ComponentStory, ComponentMeta } from '@storybook/react'
-import { CanvasComponent, EcsEditor, MAIN_CANVAS } from '../components'
+import {ComponentStory, ComponentMeta} from '@storybook/react'
 import {
-  AddComponentEvent,
-  Component,
-  ComponentSystem,
-  EndedRenderEvent,
-  EntityContainer,
-  FullRerenderEvent,
-  RerenderEvent,
-  SystemContainer,
-  TurnOffSystemByClass,
-  TurnOnSystemByClass,
+    CanvasComponent,
+    EcsEditor,
+    MAIN_CANVAS,
+    MAIN_MOUSE,
+    MouseEventComponent,
+    MousePositionComponent
+} from '../components'
+import {
+    AddComponentEvent,
+    Component,
+    ComponentSystem,
+    EndedRenderEvent,
+    EntityContainer,
+    FullRerenderEvent,
+    RerenderEvent,
+    SystemContainer,
+    TurnOffSystemByClass,
+    TurnOnSystemByClass,
 } from '../lib'
-import { EndCanvasRender, FixCameraOnWindowResize, MousePositionCapture, RenderCanvas, StartCanvasRender } from '../systems'
+import {
+    EndCanvasRender,
+    FixCameraOnWindowResize,
+    MousePositionCapture,
+    RenderCanvas,
+    StartCanvasRender
+} from '../systems'
 import ZoomOnWheel from '../systems/Editor/ZoomOnWheel'
 
 // Component Classes
 class Position extends Component {
-  public x: number = 0
-  public y: number = 0
+    public x: number = 0
+    public y: number = 0
 }
 
 class Color extends Component {
-  public fill: string = 'red'
+    public fill: string = 'red'
 }
 
 class Radius extends Component {
-  public radius: number = 10
+    public radius: number = 10
 }
 
-class DrawCircle extends Component { }
+class DrawCircle extends Component {
+}
 
 class DomNode extends Component {
-  public node: any
+    public node: any
 }
 
 class FrameRate extends Component {
-  public ms: number = 0;
-  public lastMs: number = 0;
+    public ms: number = 0;
+    public lastMs: number = 0;
 }
 // System Classes
 
 class RenderCircle extends ComponentSystem {
-  private canvasComponent: CanvasComponent = new CanvasComponent;
-  private context?: CanvasRenderingContext2D;
-  private drawFlags: DrawCircle[] = [];
-  private drawComponents: { [key: string]: { position: Position, radius: Radius, color: Color } } = {};
+    private canvasComponent: CanvasComponent = new CanvasComponent;
+    private context?: CanvasRenderingContext2D;
+    private drawFlags: DrawCircle[] = [];
+    private drawComponents: { [key: string]: { position: Position, radius: Radius, color: Color } } = {};
 
-  public onMount(): void {
-    let canvas = this.entityContainer.getEntityByTag(MAIN_CANVAS);
+    public onMount(): void {
+        let canvas = this.entityContainer.getEntityByTag(MAIN_CANVAS);
 
-    this.canvasComponent = this.entityContainer.getEntityComponent<CanvasComponent>(canvas!, CanvasComponent)!;
+        this.canvasComponent = this.entityContainer.getEntityComponent<CanvasComponent>(canvas!, CanvasComponent)!;
 
-    this.entityContainer
-      .getEventManager()
-      .subscribe(AddComponentEvent, this.onAddComponent)
+        this.entityContainer
+            .getEventManager()
+            .subscribe(AddComponentEvent, this.onAddComponent)
 
-    this.getCircleComponents();
+        this.getCircleComponents();
 
-  }
-
-  public onUnMount(): void {
-    this.entityContainer
-      .getEventManager()
-      .unsubscribe(AddComponentEvent, this.onAddComponent)
-  }
-
-  onAddComponent = (event: AddComponentEvent) => {
-
-    if (event.getComponent() instanceof DrawCircle) {
-
-      console.log("Added Circle");
-
-      this.drawFlags = this.entityContainer.getComponents<DrawCircle>(DrawCircle);
-      this.getCircleComponents();
-
-      this.entityContainer.getEventManager().dispatch(new FullRerenderEvent())
-    }
-  }
-
-  render = (): void => {
-    if (!this.canvasComponent.canvas) {
-      return;
     }
 
-    // if (!this.context) {
-    this.context = this.canvasComponent.canvas.getContext('2d')!//, { alpha: false })!;
-    // }
-
-    this.drawFlags.forEach(this.drawCircle);
-
-    return;//
-  }
-
-  drawCircle = (flag: DrawCircle, key: number): void => {
-
-    let components = this.drawComponents[flag.getEntityId()];
-    if (!components || !this.context) {
-
-      return;
+    public onUnMount(): void {
+        this.entityContainer
+            .getEventManager()
+            .unsubscribe(AddComponentEvent, this.onAddComponent)
     }
 
-    // let position = this.entityContainer.getComponentByEntityId<Position>(
-    //   flag.getEntityId(),
-    //   Position
-    // )
-    // let radius = this.entityContainer.getComponentByEntityId<Radius>(
-    //   flag.getEntityId(),
-    //   Radius
-    // )
-    // let color = this.entityContainer.getComponentByEntityId<Color>(
-    //   flag.getEntityId(),
-    //   Color
-    // )
-    // if (!position || !radius || !color || !this.context) {
-    //   return;
-    // }
+    onAddComponent = (event: AddComponentEvent) => {
 
-    this.context.beginPath();
-    this.context.arc(Math.floor(components.position.x), Math.floor(components.position.y), components.radius.radius, 0, 2 * Math.PI, false);
-    this.context.fillStyle = components.color.fill;
-    // this.context.lineWidth = 5;
-    // this.context.strokeStyle = '#003300';
-    // this.context.stroke();
-    this.context.fill();
+        if (event.getComponent() instanceof DrawCircle) {
 
-    return;
-  }
+            console.log("Added Circle");
 
-  private getCircleComponents() {
-    this.drawComponents = {};
-    this.drawFlags.forEach((flag: DrawCircle) => {
-      let position = this.entityContainer.getComponentByEntityId<Position>(
-        flag.getEntityId(),
-        Position
-      )
-      let radius = this.entityContainer.getComponentByEntityId<Radius>(
-        flag.getEntityId(),
-        Radius
-      )
-      let color = this.entityContainer.getComponentByEntityId<Color>(
-        flag.getEntityId(),
-        Color
-      )
-      if (!position || !radius || !color) {
+            this.drawFlags = this.entityContainer.getComponents<DrawCircle>(DrawCircle);
+            this.getCircleComponents();
+
+            this.entityContainer.getEventManager().dispatch(new FullRerenderEvent())
+        }
+    }
+
+    render = (): void => {
+        if (!this.canvasComponent.canvas) {
+            return;
+        }
+
+        // if (!this.context) {
+        this.context = this.canvasComponent.canvas.getContext('2d')!//, { alpha: false })!;
+        // }
+
+        this.drawFlags.forEach(this.drawCircle);
+
+        return;//
+    }
+
+    drawCircle = (flag: DrawCircle, key: number): void => {
+
+        let components = this.drawComponents[flag.getEntityId()];
+        if (!components || !this.context) {
+
+            return;
+        }
+
+        // let position = this.entityContainer.getComponentByEntityId<Position>(
+        //   flag.getEntityId(),
+        //   Position
+        // )
+        // let radius = this.entityContainer.getComponentByEntityId<Radius>(
+        //   flag.getEntityId(),
+        //   Radius
+        // )
+        // let color = this.entityContainer.getComponentByEntityId<Color>(
+        //   flag.getEntityId(),
+        //   Color
+        // )
+        // if (!position || !radius || !color || !this.context) {
+        //   return;
+        // }
+
+        this.context.beginPath();
+        this.context.arc(Math.floor(components.position.x), Math.floor(components.position.y), components.radius.radius, 0, 2 * Math.PI, false);
+        this.context.fillStyle = components.color.fill;
+        // this.context.lineWidth = 5;
+        // this.context.strokeStyle = '#003300';
+        // this.context.stroke();
+        this.context.fill();
+
         return;
-      }
+    }
 
-      this.drawComponents[flag.getEntityId()] = {
-        position: position,
-        color: color,
-        radius: radius
-      }
-    })
-  }
+    private getCircleComponents() {
+        this.drawComponents = {};
+        this.drawFlags.forEach((flag: DrawCircle) => {
+            let position = this.entityContainer.getComponentByEntityId<Position>(
+                flag.getEntityId(),
+                Position
+            )
+            let radius = this.entityContainer.getComponentByEntityId<Radius>(
+                flag.getEntityId(),
+                Radius
+            )
+            let color = this.entityContainer.getComponentByEntityId<Color>(
+                flag.getEntityId(),
+                Color
+            )
+            if (!position || !radius || !color) {
+                return;
+            }
+
+            this.drawComponents[flag.getEntityId()] = {
+                position: position,
+                color: color,
+                radius: radius
+            }
+        })
+    }
 }
 
-class MoveCircles extends ComponentSystem {
-  positionComponents: Position[] = []
+class RenderMousePosition extends ComponentSystem{
+    mousePositionComponent: MousePositionComponent = new MousePositionComponent
 
-  public onMount(): void {
-    this.positionComponents =
-      this.entityContainer.getComponents<Position>(Position)
-    setInterval(this.move)
+    private canvasComponent: CanvasComponent = new CanvasComponent;
+    private context?: CanvasRenderingContext2D;
 
-    this.entityContainer
-      .getEventManager()
-      .subscribe(AddComponentEvent, this.onAddComponent)
-  }
-  onAddComponent = (event: AddComponentEvent) => {
-    this.positionComponents =
-      this.entityContainer.getComponents<Position>(Position)
-  }
+    public onMount(): void {
+        let canvas = this.entityContainer.getEntityByTag(MAIN_CANVAS);
+        let mouse = this.entityContainer.getEntityByTag(MAIN_MOUSE)
 
-  move = () => {
-    if(!this.isActive()){
-      return;
+        this.canvasComponent = this.entityContainer.getEntityComponent<CanvasComponent>(canvas!, CanvasComponent)!;
+
+        this.mousePositionComponent =
+            this.entityContainer.getEntityComponent<MousePositionComponent>(
+                mouse!,
+                MousePositionComponent
+            )!
     }
-    this.positionComponents.forEach((position) => {
-      position.x += Math.random() - 0.5
-      position.y += Math.random() - 0.5
-    })
 
-    this.entityContainer.getEventManager().dispatch(new RerenderEvent())
-  }
+    render = (): void => {
+        if (!this.canvasComponent.canvas) {
+            return;
+        }
+
+        // if (!this.context) {
+        this.context = this.canvasComponent.canvas.getContext('2d')!//, { alpha: false })!;
+        // }
+        this.context.beginPath();
+        this.context.arc(Math.floor(this.mousePositionComponent.position.x), Math.floor(this.mousePositionComponent.position.y), 10, 0, 2 * Math.PI, false);
+        this.context.fillStyle = "red";
+        // this.context.lineWidth = 5;
+        // this.context.strokeStyle = '#003300';
+        // this.context.stroke();
+        this.context.fill();
+        return;//
+    }
+}
+class MoveCircles extends ComponentSystem {
+    positionComponents: Position[] = []
+
+    public onMount(): void {
+        this.positionComponents =
+            this.entityContainer.getComponents<Position>(Position)
+        setInterval(this.move)
+
+        this.entityContainer
+            .getEventManager()
+            .subscribe(AddComponentEvent, this.onAddComponent)
+    }
+
+    onAddComponent = (event: AddComponentEvent) => {
+        this.positionComponents =
+            this.entityContainer.getComponents<Position>(Position)
+    }
+
+    move = () => {
+        if (!this.isActive()) {
+            return;
+        }
+        this.positionComponents.forEach((position) => {
+            position.x += Math.random() - 0.5
+            position.y += Math.random() - 0.5
+        })
+
+        this.entityContainer.getEventManager().dispatch(new RerenderEvent())
+    }
 }
 
 const FRAME_RATE = 'FRAME_RATE'
+
 class FrameRateCalculatorAndRenderer extends ComponentSystem {
-  private frameRateComponent: FrameRate = new FrameRate;
-  private canvasComponent: CanvasComponent = new CanvasComponent;
-  private maxRate = 0;
-  private minRate = 1000000;
-  private frameCount = 0;
-  public onMount(): void {
-    let canvas = this.entityContainer.getEntityByTag(MAIN_CANVAS);
+    private frameRateComponent: FrameRate = new FrameRate;
+    private canvasComponent: CanvasComponent = new CanvasComponent;
+    private maxRate = 0;
+    private minRate = 1000000;
+    private frameCount = 0;
 
-    this.canvasComponent = this.entityContainer.getEntityComponent<CanvasComponent>(canvas!, CanvasComponent)!;
+    public onMount(): void {
+        let canvas = this.entityContainer.getEntityByTag(MAIN_CANVAS);
 
-    this.refillFrameRate()
+        this.canvasComponent = this.entityContainer.getEntityComponent<CanvasComponent>(canvas!, CanvasComponent)!;
 
-    this.entityContainer.getEventManager().subscribe(EndedRenderEvent, this.onRerender)
-  }
+        this.refillFrameRate()
 
-  onRerender = (event: EndedRenderEvent) => {
-    if (!this.frameRateComponent) {
-      return;
+        this.entityContainer.getEventManager().subscribe(EndedRenderEvent, this.onRerender)
     }
 
-    this.frameRateComponent.lastMs = this.frameRateComponent.ms;
-    this.frameRateComponent.ms = window.performance.now();
-  }
+    onRerender = (event: EndedRenderEvent) => {
+        if (!this.frameRateComponent) {
+            return;
+        }
 
-  public refillFrameRate() {
-    this.entityContainer.getEntitiesByTag(FRAME_RATE).forEach((entity) => {
-      this.entityContainer.removeEntity(entity)
-    })
-
-    this.frameRateComponent = new FrameRate;
-
-    this.entityContainer.createEntity([this.frameRateComponent], [FRAME_RATE])
-  }
-
-  render(): void {
-    this.frameCount++;
-    if (this.frameCount % 300 === 0) {
-      this.frameCount = 0;
-      this.minRate = 100000;
-      this.maxRate = 0;
-    }
-    if (!this.canvasComponent.canvas) {
-      return
+        this.frameRateComponent.lastMs = this.frameRateComponent.ms;
+        this.frameRateComponent.ms = window.performance.now();
     }
 
+    public refillFrameRate() {
+        this.entityContainer.getEntitiesByTag(FRAME_RATE).forEach((entity) => {
+            this.entityContainer.removeEntity(entity)
+        })
 
-    let rate = 1000 / (this.frameRateComponent.ms - this.frameRateComponent.lastMs)
-    if (rate < this.minRate) {
-      this.minRate = rate;
+        this.frameRateComponent = new FrameRate;
+
+        this.entityContainer.createEntity([this.frameRateComponent], [FRAME_RATE])
     }
-    if (rate > this.maxRate) {
-      this.maxRate = rate
+
+    render(): void {
+        this.frameCount++;
+        if (this.frameCount % 300 === 0) {
+            this.frameCount = 0;
+            this.minRate = 100000;
+            this.maxRate = 0;
+        }
+        if (!this.canvasComponent.canvas) {
+            return
+        }
+
+
+        let rate = 1000 / (this.frameRateComponent.ms - this.frameRateComponent.lastMs)
+        if (rate < this.minRate) {
+            this.minRate = rate;
+        }
+        if (rate > this.maxRate) {
+            this.maxRate = rate
+        }
+        let context = this.canvasComponent.canvas.getContext('2d')!;
+
+        context.font = '48px serif';
+        context.fillStyle = "black";
+        context.fillText(rate + "", -20, 0);
+        context.fillText(this.minRate + "", -20, 50);
+        context.fillText(this.maxRate + "", -20, 100);
+
+        return;
     }
-    let context = this.canvasComponent.canvas.getContext('2d')!;
-
-    context.font = '48px serif';
-    context.fillStyle = "black";
-    context.fillText(rate + "", -20, 0);
-    context.fillText(this.minRate + "", -20, 50);
-    context.fillText(this.maxRate + "", -20, 100);
-
-    return;
-  }
 }
 
 class LeftButtonsContainer extends ComponentSystem {
-  reactRender(): React.ReactNode {
-    return <div style={{
-      width: '100px',
-      flexShrink: 0,
-      background: "black"
-    }}>
-      <button onClick={() => addCircles(this.entityContainer)}>AddCircles</button>
-    </div>;
-  }
+    reactRender(): React.ReactNode {
+        return <div style={{
+            width: '100px',
+            flexShrink: 0,
+            background: "black"
+        }}>
+            <button onClick={() => addCircles(this.entityContainer)}>AddCircles</button>
+        </div>;
+    }
 }
 
 class StopRenderCirclesButtonContainer extends ComponentSystem {
-  off = false;
-  move = false;
+    off = false;
+    move = false;
 
-  reactRender(): React.ReactNode {
-    return <div style={{
-      width: '100px',
-      flexShrink: 0,
-      background: "black"
-    }}>
-      <button onClick={() => addCircles(this.entityContainer)}>AddCircles</button>
-      <button onClick={() => {
-        this.off = !this.off;
-        if (!this.off) {
-          this.entityContainer.getEventManager().dispatch(new TurnOnSystemByClass(RenderCircle))
-        } else {
-          this.entityContainer.getEventManager().dispatch(new TurnOffSystemByClass(RenderCircle))
-        }
-        this.entityContainer.getEventManager().dispatch(new RerenderEvent())
-      }}>Toggle Render Circle</button>
+    reactRender(): React.ReactNode {
+        return <div style={{
+            width: '100px',
+            flexShrink: 0,
+            background: "black"
+        }}>
+            <button onClick={() => addCircles(this.entityContainer)}>AddCircles</button>
+            <button onClick={() => {
+                this.off = !this.off;
+                if (!this.off) {
+                    this.entityContainer.getEventManager().dispatch(new TurnOnSystemByClass(RenderCircle))
+                } else {
+                    this.entityContainer.getEventManager().dispatch(new TurnOffSystemByClass(RenderCircle))
+                }
+                this.entityContainer.getEventManager().dispatch(new RerenderEvent())
+            }}>Toggle Render Circle
+            </button>
 
-      <button onClick={() => {
-        this.move = !this.move;
-        if (this.move) {
-          this.entityContainer.getEventManager().dispatch(new TurnOnSystemByClass(MoveCircles))
-        } else {
-          this.entityContainer.getEventManager().dispatch(new TurnOffSystemByClass(MoveCircles))
-        }
-        this.entityContainer.getEventManager().dispatch(new RerenderEvent())
-      }}>Toggle Move Circles</button>
-    </div>;
-  }
+            <button onClick={() => {
+                this.move = !this.move;
+                if (this.move) {
+                    this.entityContainer.getEventManager().dispatch(new TurnOnSystemByClass(MoveCircles))
+                } else {
+                    this.entityContainer.getEventManager().dispatch(new TurnOffSystemByClass(MoveCircles))
+                }
+                this.entityContainer.getEventManager().dispatch(new RerenderEvent())
+            }}>Toggle Move Circles
+            </button>
+        </div>;
+    }
 }
+
 ////////////////////////////
 
 export default {
-  title: 'Editor/SvgEditor',
-  component: EcsEditor,
-  parameters: {
-    // More on Story layout: https://storybook.js.org/docs/react/configure/story-layout
-    layout: 'fullscreen',
-  },
+    title: 'Editor/SvgEditor',
+    component: EcsEditor,
+    parameters: {
+        // More on Story layout: https://storybook.js.org/docs/react/configure/story-layout
+        layout: 'fullscreen',
+    },
 } as ComponentMeta<typeof EcsEditor>
 
-
-
 const Template: ComponentStory<typeof EcsEditor> = (args) => (
-  <EcsEditor {...args} />
+    <EcsEditor {...args} />
 )
-
 
 export const EmptyRender = Template.bind({});
 let entityContainerEmpty = new EntityContainer("empty")
 
 EmptyRender.args = {
-  entityContainer: entityContainerEmpty,
-  systemContainer: (new SystemContainer(entityContainerEmpty))
-    .initSystem(RenderCanvas)
-    .initSystem(StartCanvasRender)
-    .initSystem(EndCanvasRender)
+    entityContainer: entityContainerEmpty,
+    systemContainer: (new SystemContainer(entityContainerEmpty))
+        .initSystem(RenderCanvas)
+        .initSystem(StartCanvasRender)
+        .initSystem(EndCanvasRender)
 }
 
 export const RenderAndWindowResize = Template.bind({})
 let entityContainerSimpleRender = new EntityContainer("SimpleRender")
 
 RenderAndWindowResize.args = {
-  entityContainer: entityContainerSimpleRender,
-  systemContainer: (new SystemContainer(entityContainerSimpleRender))
-    .initSystem(RenderCanvas)
-    .initSystem(StartCanvasRender)
-    .initSystem(RenderCircle)
-    .initSystem(EndCanvasRender)
-    .initSystem(FixCameraOnWindowResize)
+    entityContainer: entityContainerSimpleRender,
+    systemContainer: (new SystemContainer(entityContainerSimpleRender))
+        .initSystem(RenderCanvas)
+        .initSystem(StartCanvasRender)
+        .initSystem(RenderCircle)
+        .initSystem(EndCanvasRender)
+        .initSystem(FixCameraOnWindowResize)
 }
 
 export const WithLeftContainer = Template.bind({})
 
 let entityContainerLeftContainer = new EntityContainer("LeftContainer")
 WithLeftContainer.args = {
-  entityContainer: entityContainerLeftContainer,
-  systemContainer: (new SystemContainer(entityContainerLeftContainer))
-    .initSystem(LeftButtonsContainer)
-    .initSystem(RenderCanvas)
-    .initSystem(StartCanvasRender)
-    .initSystem(RenderCircle)
-    .initSystem(EndCanvasRender)
-    .initSystem(FixCameraOnWindowResize)
+    entityContainer: entityContainerLeftContainer,
+    systemContainer: (new SystemContainer(entityContainerLeftContainer))
+        .initSystem(LeftButtonsContainer)
+        .initSystem(RenderCanvas)
+        .initSystem(StartCanvasRender)
+        .initSystem(RenderCircle)
+        .initSystem(EndCanvasRender)
+        .initSystem(FixCameraOnWindowResize)
 }
 
 export const StopRenderCirclesContainer = Template.bind({})
 let entityContainerStopRender = new EntityContainer("StopRender")
 
 StopRenderCirclesContainer.args = {
-  entityContainer: entityContainerStopRender,
-  systemContainer: (new SystemContainer(entityContainerStopRender))
-    .initSystem(StopRenderCirclesButtonContainer)
-    .initSystem(RenderCanvas)
-    .initSystem(StartCanvasRender)
-    .initSystem(RenderCircle)
-    .initSystem(EndCanvasRender)
-    .initSystem(FixCameraOnWindowResize)
+    entityContainer: entityContainerStopRender,
+    systemContainer: (new SystemContainer(entityContainerStopRender))
+        .initSystem(StopRenderCirclesButtonContainer)
+        .initSystem(RenderCanvas)
+        .initSystem(StartCanvasRender)
+        .initSystem(RenderCircle)
+        .initSystem(MousePositionCapture)
+        .initSystem(ZoomOnWheel)
+        .initSystem(RenderMousePosition)
+        .initSystem(EndCanvasRender)
+        .initSystem(FixCameraOnWindowResize)
 }
 
 
@@ -375,59 +432,58 @@ export const MovingCircles = Template.bind({})
 let entityContainerMovingCircles = new EntityContainer("MovingCircles")
 
 MovingCircles.args = {
-  entityContainer: entityContainerMovingCircles,
-  systemContainer: (new SystemContainer(entityContainerMovingCircles))
-    .initSystem(StopRenderCirclesButtonContainer)
-    .initSystem(RenderCanvas)
-    .initSystem(StartCanvasRender)
-    .initSystem(RenderCircle)
-    .initSystem(EndCanvasRender)
-    .initSystem(FixCameraOnWindowResize)
-    .initSystem(MoveCircles)
+    entityContainer: entityContainerMovingCircles,
+    systemContainer: (new SystemContainer(entityContainerMovingCircles))
+        .initSystem(StopRenderCirclesButtonContainer)
+        .initSystem(RenderCanvas)
+        .initSystem(StartCanvasRender)
+        .initSystem(RenderCircle)
+        .initSystem(EndCanvasRender)
+        .initSystem(FixCameraOnWindowResize)
+        .initSystem(MoveCircles)
 }
 
 
 function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+    return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 async function addCircles(entityContainer: EntityContainer) {
-  await sleep(1000);
 
-  for (let i = 0; i < 10; i++) {
-    // await sleep(2);
+    for (let i = 0; i < 10; i++) {
+        // await sleep(2);
+        let position = new Position()
+        position.x = Math.random() * 500
+        position.y = Math.random() * 500
+
+        let color = new Color()
+        color.fill = Math.random() > 0.5 ? 'green' : 'red'
+
+        let radius = new Radius()
+        radius.radius = 10
+
+        let entity = entityContainer.createEntity([
+            position,
+            color,
+            radius,
+            new DrawCircle(),
+        ])
+    }
     let position = new Position()
-    position.x = Math.random() * 500
-    position.y = Math.random() * 500
-
+    position.x = 0
+    position.y = 0
     let color = new Color()
-    color.fill = Math.random() > 0.5 ? 'green' : 'red'
-
+    color.fill = "blue"
     let radius = new Radius()
-    radius.radius = 10
+    radius.radius = 20
 
     let entity = entityContainer.createEntity([
-      position,
-      color,
-      radius,
-      new DrawCircle(),
+        position,
+        color,
+        radius,
+        new DrawCircle(),
     ])
-  }
-  let position = new Position()
-  position.x = 0
-  position.y = 0
-  let color = new Color()
-  color.fill = "blue"
-  let radius = new Radius()
-  radius.radius = 20
-
-  let entity = entityContainer.createEntity([
-    position,
-    color,
-    radius,
-    new DrawCircle(),
-  ])
-  setTimeout(() => entityContainer.getEventManager().dispatch(new RerenderEvent()), 100)
+    setTimeout(() => entityContainer.getEventManager().dispatch(new RerenderEvent()), 100)
 }
 
 // async function updateLoop() {
