@@ -4,7 +4,7 @@ import { CameraComponent, CanvasComponent, MAIN_CAMERA, MAIN_CANVAS } from "../.
 import { ComponentSystem } from "../../lib";
 
 export default class RenderCanvas extends ComponentSystem {
-    private canvasComnponent: CanvasComponent = new CanvasComponent
+    private canvasComponent: CanvasComponent = new CanvasComponent
     private cameraComponent: CameraComponent = new CameraComponent;
 
     public onMount(): void {
@@ -19,7 +19,7 @@ export default class RenderCanvas extends ComponentSystem {
         this.entityContainer.removeEntitiesWithTag(MAIN_CANVAS);
         
         this.entityContainer.createEntity([
-            this.canvasComnponent
+            this.canvasComponent
         ], [MAIN_CANVAS]);
     }
     reactRender = (): ReactNode => {
@@ -34,10 +34,10 @@ export default class RenderCanvas extends ComponentSystem {
                 width: this.cameraComponent.camera?.initViewBox.dimensions.x+"px",
                 height: this.cameraComponent.camera?.initViewBox.dimensions.y+"px"
             }}
-            width={this.cameraComponent.camera?.initViewBox.dimensions.x/this.canvasComnponent.upscaleFactor}
-            height={this.cameraComponent.camera?.initViewBox.dimensions.y/this.canvasComnponent.upscaleFactor}
+            width={this.cameraComponent.camera?.initViewBox.dimensions.x/this.canvasComponent.upscaleFactor}
+            height={this.cameraComponent.camera?.initViewBox.dimensions.y/this.canvasComponent.upscaleFactor}
             ref={(canvas: HTMLCanvasElement) => {
-                this.canvasComnponent.canvas = canvas;
+                this.canvasComponent.canvas = canvas;
             }}  
         ></canvas>
     }

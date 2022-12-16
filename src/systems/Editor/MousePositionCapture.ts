@@ -109,9 +109,6 @@ export default class MousePositionCapture extends ComponentSystem {
         this.mousePositionComponent.position.y /= heightRatio;
 
         this.mousePositionComponent.position.add(currentViewport.position);
-
-        this.entityContainer.getEventManager().dispatch(new RerenderEvent());
-
     }
 
     removeMoveHandler() {
