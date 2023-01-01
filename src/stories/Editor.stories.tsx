@@ -1,12 +1,12 @@
 import React from 'react'
 import {ComponentStory, ComponentMeta} from '@storybook/react'
 import {
-    CanvasComponent,
+    CanvasComponent, DraggableComponent, DropContainerComponent,
     EcsEditor,
     MAIN_CANVAS,
     MAIN_MOUSE,
     MouseEventComponent,
-    MousePositionComponent
+    MousePositionComponent, PositionComponent, SvgPathComponent
 } from '../components'
 import {
     AddComponentEvent,
@@ -18,7 +18,7 @@ import {
     RerenderEvent,
     SystemContainer,
     TurnOffSystemByClass,
-    TurnOnSystemByClass,
+    TurnOnSystemByClass, Vector,
 } from '../lib'
 import {
     EndCanvasRender,
@@ -28,6 +28,8 @@ import {
     StartCanvasRender
 } from '../systems'
 import ZoomOnWheel from '../systems/Editor/ZoomOnWheel'
+import SvgPathRender from "../systems/Editor/SvgPathRender";
+import DragAndDrop, {DROP_GLOBAL} from "../systems/Editor/DragAndDrop";
 
 // Component Classes
 class Position extends Component {
@@ -54,6 +56,7 @@ class FrameRate extends Component {
     public ms: number = 0;
     public lastMs: number = 0;
 }
+
 // System Classes
 
 class RenderCircle extends ComponentSystem {
@@ -171,7 +174,7 @@ class RenderCircle extends ComponentSystem {
     }
 }
 
-class RenderMousePosition extends ComponentSystem{
+class RenderMousePosition extends ComponentSystem {
     mousePositionComponent: MousePositionComponent = new MousePositionComponent
 
     private canvasComponent: CanvasComponent = new CanvasComponent;
@@ -208,6 +211,7 @@ class RenderMousePosition extends ComponentSystem{
         return;//
     }
 }
+
 class MoveCircles extends ComponentSystem {
     positionComponents: Position[] = []
 
@@ -444,6 +448,74 @@ MovingCircles.args = {
 }
 
 
+export const SvgRender = Template.bind({});
+let entityContainerSvgRender = new EntityContainer("svgRender")
+
+SvgRender.args = {
+    entityContainer: entityContainerSvgRender,
+    systemContainer: (new SystemContainer(entityContainerSvgRender))
+        .initSystem(LeftButtonsContainer)
+        .initSystem(RenderCanvas)
+        .initSystem(StartCanvasRender)
+        .initSystem(MousePositionCapture)
+        .initSystem(ZoomOnWheel)
+        .initSystem(SvgPathRender)
+        .initSystem(EndCanvasRender)
+        .initSystem(FixCameraOnWindowResize)
+}
+
+export const DragAndDropTemplate = Template.bind({});
+let entityContainerDragAndDrop = new EntityContainer("dragAndDrop")
+
+DragAndDropTemplate.args = {
+    entityContainer: entityContainerDragAndDrop,
+    systemContainer: (new SystemContainer(entityContainerDragAndDrop))
+        .initSystem(LeftButtonsContainer)
+        .initSystem(RenderCanvas)
+        .initSystem(StartCanvasRender)
+        .initSystem(MousePositionCapture)
+        .initSystem(ZoomOnWheel)
+        .initSystem(SvgPathRender)
+        .initSystem(DragAndDrop)
+        .initSystem(EndCanvasRender)
+        .initSystem(FixCameraOnWindowResize)
+}
+
+
+let rectPath = new SvgPathComponent();
+rectPath.path = "m0,0 150,0 150,50 0,50z";
+rectPath.fillStyle = "yellow";
+
+rectPath.strokeWidth = 2;
+
+let dropContainer = new DropContainerComponent();
+
+dropContainer.acceptedTags = ["dropRedCircle"];
+
+entityContainerDragAndDrop.createEntity([
+    new PositionComponent(),
+    rectPath,
+    dropContainer
+])
+
+
+rectPath = new SvgPathComponent();
+rectPath.path = "m0,0 100,0 100,50 0,50z";
+rectPath.fillStyle = "blue";
+
+rectPath.strokeWidth = 2;
+
+dropContainer = new DropContainerComponent();
+
+dropContainer.acceptedTags = ["dropGreenCircle"];
+let contPosition = new PositionComponent();
+contPosition.coordinates.addXY(100,100);
+entityContainerDragAndDrop.createEntity([
+    contPosition,
+    rectPath,
+    dropContainer
+])
+
 function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -468,6 +540,27 @@ async function addCircles(entityContainer: EntityContainer) {
             radius,
             new DrawCircle(),
         ])
+
+        let path = new SvgPathComponent();
+        path.path = ' m -'+radius.radius+', 0\n' +
+            'a '+radius.radius+','+radius.radius+' 0 1,0 '+(radius.radius*2)+',0\n' +
+            'a '+radius.radius+','+radius.radius+' 0 1,0 -'+(radius.radius*2)+',0';
+        path.fillStyle = color.fill
+        path.strokeStyle = "black"
+
+        let coords = new PositionComponent();
+        coords.coordinates = new Vector(position.x, position.y);
+        let draggable = new DraggableComponent();
+        if (color.fill === 'green'){
+            draggable.tags.push("dropGreenCircle");
+        } else {
+            draggable.tags.push("dropRedCircle");
+        }
+        let svgEntity = entityContainer.createEntity([
+            path,
+            coords,
+            draggable
+        ]);
     }
     let position = new Position()
     position.x = 0

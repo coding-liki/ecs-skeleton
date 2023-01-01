@@ -6,7 +6,7 @@ import {
     MousePositionComponent,
     HtmlElementComponent, CanvasComponent, MAIN_CANVAS,
 } from '../../components'
-import {RerenderEvent, Vector} from '../../lib'
+import {Vector} from '../../lib'
 import ComponentSystem from '../../lib/ecs/ComponentSystem'
 
 export default class MousePositionCapture extends ComponentSystem {
@@ -64,7 +64,7 @@ export default class MousePositionCapture extends ComponentSystem {
 
     onMove = (event: MouseEvent) => {
         if (this.mouseEventComponent.event) {
-            this.mouseEventComponent.prevoiusEvent = this.mouseEventComponent?.event
+            this.mouseEventComponent.previousEvent = this.mouseEventComponent?.event
         }
 
         this.mouseEventComponent.event = event;
