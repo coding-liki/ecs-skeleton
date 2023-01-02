@@ -8,9 +8,8 @@ export default class RenderCanvas extends ComponentSystem {
     private cameraComponent: CameraComponent = new CameraComponent;
 
     public onMount(): void {
-        let camera = this.entityContainer.getEntityByTag(MAIN_CAMERA);
-        
-        this.cameraComponent = this.entityContainer.getEntityComponent<CameraComponent>(camera!, CameraComponent)!;
+        let camera = this.entityContainer.getEntityByTag(MAIN_CAMERA)!;
+        this.initComponentField("cameraComponent", camera);
 
         this.refillCanvas();
     }

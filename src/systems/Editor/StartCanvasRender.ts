@@ -18,13 +18,13 @@ export default class StartCanvasRender extends ComponentSystem {
     mousePositionComponent: MousePositionComponent = new MousePositionComponent;
 
     public onMount(): void {
-        let camera = this.entityContainer.getEntityByTag(MAIN_CAMERA);
-        let canvas = this.entityContainer.getEntityByTag(MAIN_CANVAS);
-        let mouse = this.entityContainer.getEntityByTag(MAIN_MOUSE)
+        let camera = this.entityContainer.getEntityByTag(MAIN_CAMERA)!;
+        let canvas = this.entityContainer.getEntityByTag(MAIN_CANVAS)!;
+        let mouse = this.entityContainer.getEntityByTag(MAIN_MOUSE)!;
 
-        this.mousePositionComponent = this.entityContainer.getEntityComponent<MousePositionComponent>(mouse!, MousePositionComponent)!;
-        this.cameraComponent = this.entityContainer.getEntityComponent<CameraComponent>(camera!, CameraComponent)!;
-        this.canvasComponent = this.entityContainer.getEntityComponent<CanvasComponent>(canvas!, CanvasComponent)!;
+        this.initComponentField("mousePositionComponent", mouse);
+        this.initComponentField("cameraComponent", camera);
+        this.initComponentField("canvasComponent", canvas);
     }
 
     public render(): void {

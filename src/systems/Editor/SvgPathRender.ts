@@ -1,7 +1,7 @@
 import {
     CanvasComponent, MAIN_CANVAS, SvgPathComponent, PositionComponent,
 } from '../../components'
-import {AddComponentEvent} from '../../lib'
+import {AddComponentEvent, RemoveComponentEvent} from '../../lib'
 import ComponentSystem from '../../lib/ecs/ComponentSystem'
 
 type PathData = {
@@ -16,21 +16,22 @@ export default class SvgPathRender extends ComponentSystem {
     pathsData: PathData[] = [];
 
     public onMount(): void {
-        let canvas = this.entityContainer.getEntityByTag(MAIN_CANVAS);
-        this.canvasComponent = this.entityContainer.getEntityComponent<CanvasComponent>(canvas!, CanvasComponent)!;
+        let canvas = this.entityContainer.getEntityByTag(MAIN_CANVAS)!;
+        this.initComponentField("canvasComponent", canvas);
 
         this.entityContainer
             .getEventManager()
-            .subscribe(AddComponentEvent, this.onAddComponent);
+            .subscribe(AddComponentEvent, this.onAddComponent)
+            .subscribe(RemoveComponentEvent, this.onRemoveComponent);
 
         this.getPathsData();
-
     }
 
     public onUnMount(): void {
         this.entityContainer
             .getEventManager()
             .unsubscribe(AddComponentEvent, this.onAddComponent)
+            .unsubscribe(RemoveComponentEvent, this.onRemoveComponent)
     }
 
     private onAddComponent = (event: AddComponentEvent) => {
@@ -41,11 +42,20 @@ export default class SvgPathRender extends ComponentSystem {
         this.getPathsData();
     }
 
+    private onRemoveComponent = (event: RemoveComponentEvent) => {
+        if (!(event.getComponent() instanceof SvgPathComponent)) {
+            return;
+        }
+
+        this.getPathsData();
+    }
+
     private getPathsData = () => {
-        let paths = this.entityContainer.getComponents<SvgPathComponent>(SvgPathComponent);
+        let paths: SvgPathComponent[] = this.entityContainer.getComponents(SvgPathComponent);
         this.pathsData = [];
+
         paths.forEach((path: SvgPathComponent) => {
-            let position = this.entityContainer.getComponentByEntityId<PositionComponent>(path.getEntityId(), PositionComponent)!;
+            let position: PositionComponent = this.entityContainer.getEntityComponent(path.getEntityId(), PositionComponent)!;
             this.pathsData.push({
                 path: path,
                 position: position

@@ -1,10 +1,12 @@
 import {
-    CameraComponent,
     MAIN_CAMERA,
     MAIN_MOUSE,
+    MAIN_CANVAS,
     MouseEventComponent,
     MousePositionComponent,
-    HtmlElementComponent, CanvasComponent, MAIN_CANVAS,
+    HtmlElementComponent,
+    CanvasComponent,
+    CameraComponent,
 } from '../../components'
 import {Vector} from '../../lib'
 import ComponentSystem from '../../lib/ecs/ComponentSystem'
@@ -16,35 +18,16 @@ export default class MousePositionCapture extends ComponentSystem {
     htmlElementComponent: HtmlElementComponent = new HtmlElementComponent
     cameraComponent: CameraComponent = new CameraComponent
 
-    public onMount(): void {
-        let mouse = this.entityContainer.getEntityByTag(MAIN_MOUSE)
-        let camera = this.entityContainer.getEntityByTag(MAIN_CAMERA)
-        let canvas = this.entityContainer.getEntityByTag(MAIN_CANVAS);
-        this.canvasComponent = this.entityContainer.getEntityComponent<CanvasComponent>(canvas!, CanvasComponent)!;
+    public onMount = (): void => {
+        let mouse = this.entityContainer.getEntityByTag(MAIN_MOUSE)!;
+        let camera = this.entityContainer.getEntityByTag(MAIN_CAMERA)!;
+        let canvas = this.entityContainer.getEntityByTag(MAIN_CANVAS)!;
 
-        this.htmlElementComponent =
-            this.entityContainer.getEntityComponent<HtmlElementComponent>(
-                camera!,
-                HtmlElementComponent
-            )!
-
-        this.mousePositionComponent =
-            this.entityContainer.getEntityComponent<MousePositionComponent>(
-                mouse!,
-                MousePositionComponent
-            )!
-
-        this.mouseEventComponent =
-            this.entityContainer.getEntityComponent<MouseEventComponent>(
-                mouse!,
-                MouseEventComponent
-            )!
-
-        this.cameraComponent =
-            this.entityContainer.getEntityComponent<CameraComponent>(
-                camera!,
-                CameraComponent
-            )!
+        this.initComponentField("canvasComponent", canvas)
+        this.initComponentField("htmlElementComponent", camera)
+        this.initComponentField("cameraComponent", camera)
+        this.initComponentField("mousePositionComponent", mouse)
+        this.initComponentField("mouseEventComponent", mouse)
 
         this.addMoveHandler()
     }
@@ -71,7 +54,8 @@ export default class MousePositionCapture extends ComponentSystem {
 
         if (
             !this.cameraComponent.camera ||
-            !this.htmlElementComponent.element
+            !this.htmlElementComponent.element ||
+            !this.canvasComponent.canvas
         ) {
             return
         }
@@ -82,7 +66,7 @@ export default class MousePositionCapture extends ComponentSystem {
         let computedStyle = getComputedStyle(this.htmlElementComponent.element)
 
         let editorRect = this.htmlElementComponent.element.getBoundingClientRect()
-        let canvasRect = this.canvasComponent.canvas?.getBoundingClientRect()
+        let canvasRect = this.canvasComponent.canvas.getBoundingClientRect()
         let initViewport = this.cameraComponent.camera.initViewBox;
         let currentViewport = this.cameraComponent.camera.get2DViewBox();
 
@@ -96,19 +80,19 @@ export default class MousePositionCapture extends ComponentSystem {
             scaledDimensions.y /
             currentViewport.dimensions.y;
 
+        let mouseEvent = this.mouseEventComponent.event;
+
         this.mousePositionComponent.position = new Vector(
-            this.mouseEventComponent.event.clientX - canvasRect!.left -
-            editorRect.left -
-            parseFloat(computedStyle.borderLeftWidth),
-            this.mouseEventComponent.event.clientY - canvasRect!.top -
-            editorRect.top -
-            parseFloat(computedStyle.borderTopWidth)
+            mouseEvent.clientX - canvasRect!.left - editorRect.left - parseFloat(computedStyle.borderLeftWidth),
+            mouseEvent.clientY - canvasRect!.top - editorRect.top - parseFloat(computedStyle.borderTopWidth)
         );
+        let mousePosition = this.mousePositionComponent.position;
 
-        this.mousePositionComponent.position.x /= widthRatio;
-        this.mousePositionComponent.position.y /= heightRatio;
 
-        this.mousePositionComponent.position.add(currentViewport.position);
+        mousePosition.x /= widthRatio;
+        mousePosition.y /= heightRatio;
+
+        mousePosition.add(currentViewport.position);
     }
 
     removeMoveHandler() {

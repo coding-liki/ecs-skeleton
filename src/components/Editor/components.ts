@@ -39,7 +39,7 @@ export class SvgPathComponent extends Component {
     public strokeWidth: number = 4;
 }
 
-enum DragState {
+export enum DragState {
     NOT_DRAGGING,
     DRAGGING
 }
@@ -47,9 +47,10 @@ enum DragState {
 export class DraggableComponent extends Component {
     public state: DragState = DragState.NOT_DRAGGING;
     public tags: string[] = [];
+    public dropContainerEntityId?: string;
 }
 
 export class DropContainerComponent extends Component {
-    public entities: Entity[] = [];
+    public entities: string[] = [];
     public acceptedTags: string[] = [];
 }

@@ -1,10 +1,13 @@
 import EntityContainer from "./EntityContainer";
-import { TurnOffSystemByClass, TurnOffSystemByName, TurnOnSystemByClass, TurnOnSystemByName } from "./events";
-import { ComponentSystemInterface, SystemContainerInterface } from "./interfaces";
+import {TurnOffSystemByClass, TurnOffSystemByName, TurnOnSystemByClass, TurnOnSystemByName} from "./events";
+import {ComponentSystemInterface, SystemContainerInterface} from "./interfaces";
+
 const NO_NAME = '';
-type WithConstructor = {
-    constructor(): any
-}
+
+type ComponentSystemConstructor = {
+    new(entityContainer: EntityContainer, name: string): ComponentSystemInterface;
+};
+
 export default class SystemContainer implements SystemContainerInterface {
     private entityContainer: EntityContainer;
     private systemsByClass: { [key: string]: ComponentSystemInterface[] } = {}
@@ -50,24 +53,27 @@ export default class SystemContainer implements SystemContainerInterface {
     getActive(): ComponentSystemInterface[] {
         return this.activeSystems;
     }
+
     getAll(): ComponentSystemInterface[] {
         return this.allSystems;
     }
+
     getByName(name: string): ComponentSystemInterface | undefined {
         return this.systemsByName[name];
     }
+
     getByClass<SystemClass extends ComponentSystemInterface>(className: Function): SystemClass[] | undefined {
         return this.systemsByClass[className.name] as SystemClass[];
 
     }
+
     getFirstByClass<SystemClass extends ComponentSystemInterface>(className: Function): SystemClass | undefined {
         let systems = this.getByClass<SystemClass>(className)!;
         return systems[0] as SystemClass;
     }
 
-    public initSystem(className: Function, name: string = NO_NAME): SystemContainerInterface {
-        // @ts-ignore
-        let system = new className( this.entityContainer, name) as ComponentSystemInterface;
+    public initSystem(className: ComponentSystemConstructor, name: string = NO_NAME): SystemContainerInterface {
+        let system = new className(this.entityContainer, name);
 
         system.turnOn();
 

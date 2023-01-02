@@ -1,17 +1,18 @@
 import {
     CameraComponent,
+    CanvasComponent,
+    DraggableComponent,
+    DragState,
+    DropContainerComponent,
+    HtmlElementComponent,
     MAIN_CAMERA,
+    MAIN_CANVAS,
     MAIN_MOUSE,
     MousePositionComponent,
-    HtmlElementComponent,
-    CanvasComponent,
-    MAIN_CANVAS,
-    SvgPathComponent,
     PositionComponent,
-    DraggableComponent,
-    DropContainerComponent,
+    SvgPathComponent,
 } from '../../components'
-import {AddComponentEvent, FullRerenderEvent, Vector} from '../../lib'
+import {AddComponentEvent, FullRerenderEvent, RemoveComponentEvent, Vector} from '../../lib'
 import ComponentSystem from '../../lib/ecs/ComponentSystem'
 
 type DraggablePathData = {
@@ -36,7 +37,6 @@ export const DROP_GLOBAL = "global";
 
 export default class DragAndDrop extends ComponentSystem {
     private canvasComponent: CanvasComponent = new CanvasComponent
-    private context?: CanvasRenderingContext2D;
     mousePositionComponent: MousePositionComponent = new MousePositionComponent
     htmlElementComponent: HtmlElementComponent = new HtmlElementComponent
     cameraComponent: CameraComponent = new CameraComponent
@@ -46,26 +46,19 @@ export default class DragAndDrop extends ComponentSystem {
     movingPathData?: MovingPath;
 
     public onMount(): void {
-        let mouse = this.entityContainer.getEntityByTag(MAIN_MOUSE)
-        let camera = this.entityContainer.getEntityByTag(MAIN_CAMERA);
-        let canvas = this.entityContainer.getEntityByTag(MAIN_CANVAS);
-        this.canvasComponent = this.entityContainer.getEntityComponent<CanvasComponent>(canvas!, CanvasComponent)!;
+        let mouse = this.entityContainer.getEntityByTag(MAIN_MOUSE)!;
+        let camera = this.entityContainer.getEntityByTag(MAIN_CAMERA)!;
+        let canvas = this.entityContainer.getEntityByTag(MAIN_CANVAS)!;
 
-        this.htmlElementComponent =
-            this.entityContainer.getEntityComponent<HtmlElementComponent>(
-                camera!,
-                HtmlElementComponent
-            )!
-
-        this.mousePositionComponent =
-            this.entityContainer.getEntityComponent<MousePositionComponent>(
-                mouse!,
-                MousePositionComponent
-            )!
+        this.initComponentField("canvasComponent", canvas)
+        this.initComponentField("htmlElementComponent", camera)
+        this.initComponentField("cameraComponent", camera)
+        this.initComponentField("mousePositionComponent", mouse)
 
         this.entityContainer
             .getEventManager()
-            .subscribe(AddComponentEvent, this.onAddComponent);
+            .subscribe(AddComponentEvent, this.onAddComponent)
+            .subscribe(RemoveComponentEvent, this.onRemoveComponent);
 
         this.getPathsData();
 
@@ -75,10 +68,10 @@ export default class DragAndDrop extends ComponentSystem {
     public onUnMount(): void {
         this.entityContainer
             .getEventManager()
-            .unsubscribe(AddComponentEvent, this.onAddComponent);
+            .unsubscribe(AddComponentEvent, this.onAddComponent)
+            .unsubscribe(RemoveComponentEvent, this.onRemoveComponent);
 
         this.removeEvents();
-
     }
 
 
@@ -90,12 +83,20 @@ export default class DragAndDrop extends ComponentSystem {
         this.getPathsData();
     }
 
+    private onRemoveComponent = (event: RemoveComponentEvent) => {
+        if (!(event.getComponent() instanceof DraggableComponent) && !(event.getComponent() instanceof DropContainerComponent)) {
+            return;
+        }
+
+        this.getPathsData();
+    }
+
     private getPathsData = () => {
-        let dragStates = this.entityContainer.getComponents<DraggableComponent>(DraggableComponent);
+        let dragStates: DraggableComponent[] = this.entityContainer.getComponents(DraggableComponent);
         this.pathsData = [];
         dragStates.forEach((dragState: DraggableComponent) => {
-            let position = this.entityContainer.getComponentByEntityId<PositionComponent>(dragState.getEntityId(), PositionComponent)!;
-            let path = this.entityContainer.getComponentByEntityId<SvgPathComponent>(dragState.getEntityId(), SvgPathComponent)!;
+            let position: PositionComponent = this.entityContainer.getComponentByEntityId(dragState.getEntityId(), PositionComponent)!;
+            let path: SvgPathComponent = this.entityContainer.getComponentByEntityId(dragState.getEntityId(), SvgPathComponent)!;
             this.pathsData.push({
                 path: path,
                 position: position,
@@ -103,11 +104,11 @@ export default class DragAndDrop extends ComponentSystem {
             });
         });
 
-        let dropContainers = this.entityContainer.getComponents<DropContainerComponent>(DropContainerComponent);
+        let dropContainers: DropContainerComponent[] = this.entityContainer.getComponents(DropContainerComponent);
         this.dropContainersData = [];
         dropContainers.forEach((dropContainer: DropContainerComponent) => {
-            let position = this.entityContainer.getComponentByEntityId<PositionComponent>(dropContainer.getEntityId(), PositionComponent)!;
-            let path = this.entityContainer.getComponentByEntityId<SvgPathComponent>(dropContainer.getEntityId(), SvgPathComponent)!;
+            let position: PositionComponent = this.entityContainer.getEntityComponent(dropContainer.getEntityId(), PositionComponent)!;
+            let path: SvgPathComponent = this.entityContainer.getEntityComponent(dropContainer.getEntityId(), SvgPathComponent)!;
             this.dropContainersData.push({
                 path: path,
                 position: position,
@@ -148,9 +149,7 @@ export default class DragAndDrop extends ComponentSystem {
 
         coordinates.add(this.mousePositionComponent.position).add(this.movingPathData.dragPoint);
         this.entityContainer.getEventManager().dispatch(new FullRerenderEvent);
-
     }
-
 
     private onDown = (event: MouseEvent) => {
         if (this.movingPathData) {
@@ -179,8 +178,11 @@ export default class DragAndDrop extends ComponentSystem {
     }
 
     private clearMovingPath() {
-        this.movingPathData = undefined;
-        this.entityContainer.getEventManager().dispatch(new FullRerenderEvent);
+        if (this.movingPathData) {
+            this.movingPathData.path.dragState.state = DragState.NOT_DRAGGING;
+            this.movingPathData = undefined;
+            this.entityContainer.getEventManager().dispatch(new FullRerenderEvent);
+        }
     }
 
     private tryStartDrag = (pathData: DraggablePathData) => {
@@ -203,6 +205,7 @@ export default class DragAndDrop extends ComponentSystem {
                 startPosition: pathData.position.coordinates.clone(),
                 dragPoint: pathData.position.coordinates.clone().sub(mousePosition)
             }
+            pathData.dragState.state = DragState.DRAGGING;
         }
     }
 
@@ -223,9 +226,21 @@ export default class DragAndDrop extends ComponentSystem {
         if (!context.isPointInPath(path2d, mousePosition.x, mousePosition.y)) {
             return;
         }
-
-        if (this.movingPathData.path.dragState.tags.filter((dragTag: string) => dropContainerData.dropContainer.acceptedTags.includes(dragTag)).length === 0) {
+        let dragState = this.movingPathData.path.dragState;
+        let dropContainer = dropContainerData.dropContainer;
+        let oldDropContainer: DropContainerComponent | undefined;
+        if (dragState.tags.filter((dragTag: string) => dropContainer.acceptedTags.includes(dragTag)).length === 0) {
             return;
+        }
+
+        if (!dropContainer.entities.includes(dragState.getEntityId())) {
+            dropContainer.entities.push(dragState.getEntityId());
+
+            if (dragState.dropContainerEntityId) {
+                oldDropContainer = this.entityContainer.getEntityComponent(dragState.dropContainerEntityId, DropContainerComponent)!;
+                oldDropContainer.entities.filter((entityId: string) => dragState.getEntityId() !== entityId);
+            }
+            dragState.dropContainerEntityId = dropContainer.getEntityId();
         }
 
         this.clearMovingPath();

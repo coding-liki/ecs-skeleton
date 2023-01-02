@@ -1,5 +1,5 @@
-import { CameraComponent, MAIN_CAMERA, MAIN_MOUSE, MouseEventComponent, MousePositionComponent, HtmlElementComponent } from "../../components";
-import { RerenderEvent } from "../../lib";
+import {CameraComponent, MAIN_CAMERA, MAIN_MOUSE, MousePositionComponent, HtmlElementComponent} from "../../components";
+import {RerenderEvent} from "../../lib";
 import ComponentSystem from "../../lib/ecs/ComponentSystem";
 
 export default class ZoomOnWheel extends ComponentSystem {
@@ -10,12 +10,12 @@ export default class ZoomOnWheel extends ComponentSystem {
 
     public onMount(): void {
 
-        let camera = this.entityContainer.getEntityByTag(MAIN_CAMERA);
-        let mouse = this.entityContainer.getEntityByTag(MAIN_MOUSE);
+        let camera = this.entityContainer.getEntityByTag(MAIN_CAMERA)!;
+        let mouse = this.entityContainer.getEntityByTag(MAIN_MOUSE)!;
 
-        this.htmlElementComponent = this.entityContainer.getEntityComponent<HtmlElementComponent>(camera!, HtmlElementComponent)!;
-        this.cameraComponent = this.entityContainer.getEntityComponent<CameraComponent>(camera!, CameraComponent)!;
-        this.mousePositionComponent = this.entityContainer.getEntityComponent<MousePositionComponent>(mouse!, MousePositionComponent)!;
+        this.initComponentField("htmlElementComponent", camera)
+        this.initComponentField("cameraComponent", camera)
+        this.initComponentField("mousePositionComponent", mouse)
 
         this.addWheelHandler();
     }

@@ -1,6 +1,6 @@
-import { CameraComponent, CanvasComponent, HtmlElementComponent } from "../../components";
-import { MAIN_CAMERA, MAIN_CANVAS } from "../../components/Editor/constants";
-import { Camera, FullRerenderEvent, RerenderEvent, Vector, Viewbox } from "../../lib";
+import {CameraComponent, CanvasComponent, HtmlElementComponent} from "../../components";
+import {MAIN_CAMERA, MAIN_CANVAS} from "../../components";
+import {Camera, FullRerenderEvent, Vector, Viewbox} from "../../lib";
 import ComponentSystem from "../../lib/ecs/ComponentSystem";
 
 export default class FixCameraOnWindowResize extends ComponentSystem {
@@ -23,7 +23,7 @@ export default class FixCameraOnWindowResize extends ComponentSystem {
     }
 
     onWindowResize = (needDelay: boolean = false) => {
-        if(!this.htmlElementComponent.element || !this.cameraComponent.camera || !this.canvasComponent.canvas){            
+        if (!this.htmlElementComponent.element || !this.cameraComponent.camera || !this.canvasComponent.canvas) {
             setTimeout(this.onWindowResize);
             return;
         }
@@ -45,9 +45,7 @@ export default class FixCameraOnWindowResize extends ComponentSystem {
         if (needDelay) {
             setTimeout(() => {
                 this.entityContainer.getEventManager().dispatch(new FullRerenderEvent);
-                
             });
-        
         } else {
             this.entityContainer.getEventManager().dispatch(new FullRerenderEvent)
         }

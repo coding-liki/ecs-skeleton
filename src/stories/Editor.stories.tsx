@@ -5,7 +5,6 @@ import {
     EcsEditor,
     MAIN_CANVAS,
     MAIN_MOUSE,
-    MouseEventComponent,
     MousePositionComponent, PositionComponent, SvgPathComponent
 } from '../components'
 import {
@@ -29,7 +28,7 @@ import {
 } from '../systems'
 import ZoomOnWheel from '../systems/Editor/ZoomOnWheel'
 import SvgPathRender from "../systems/Editor/SvgPathRender";
-import DragAndDrop, {DROP_GLOBAL} from "../systems/Editor/DragAndDrop";
+import DragAndDrop from "../systems/Editor/DragAndDrop";
 
 // Component Classes
 class Position extends Component {

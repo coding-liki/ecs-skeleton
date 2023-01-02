@@ -19,7 +19,7 @@ export default class EntityContainer {
   private containerPrefix: string
 
   public constructor(containerPrefix: string = '') {
-    this.id = this.generatenNewId();
+    this.id = this.generateNewId();
     this.containerPrefix = containerPrefix
 
     this.eventManager = EventManager.instance(
@@ -49,13 +49,14 @@ export default class EntityContainer {
     return this.getComponentsByEntityId<ComponentType>(id, componentType)[0];
   }
 
-  public getEntityComponents<ComponentType extends ComponentInterface = Component>(entity: Entity, componentType: Function = Component): ComponentType[] {
+  public getEntityComponents<ComponentType extends ComponentInterface = Component>(entity: Entity, componentType: Function  = Component): ComponentType[] {
     return this.getComponentsByEntityId<ComponentType>(entity.getId(), componentType);
   }
 
-  public getEntityComponent<ComponentType extends ComponentInterface = Component>(entity: Entity, componentType: Function = Component): ComponentType | undefined {
-    let components = this.getComponentsByEntityId<ComponentType>(entity.getId(), componentType);
-    return components[0];
+  public getEntityComponent<ComponentType extends ComponentInterface = Component>(entity: Entity|string, componentType: Function = Component): ComponentType | undefined {
+    let entityId =  entity instanceof Entity ? entity.getId() : entity;
+
+    return this.getComponentByEntityId<ComponentType>(entityId, componentType);
   }
 
   public getComponents<ComponentType extends ComponentInterface = Component>(componentType: Function = Component): ComponentType[] {
@@ -63,7 +64,7 @@ export default class EntityContainer {
   }
 
   public createEntity(components: ComponentInterface[], tags: string[] = []): Entity {
-    let newId: string = this.generatenNewId()
+    let newId: string = this.generateNewId()
 
     components.forEach((component: ComponentInterface) => {
       component.setEntityId(newId)
@@ -77,7 +78,7 @@ export default class EntityContainer {
   }
 
   public addEntity(entity: Entity) {
-    let id: string = entity.getId() ?? this.generatenNewId();
+    let id: string = entity.getId() ?? this.generateNewId();
 
     entity.getTags()?.forEach((tag: string) => {
       if (!this.taggedEntities[tag]) {
@@ -143,9 +144,7 @@ export default class EntityContainer {
     });
 
   }
-  // public getEntityById(id: string): Entity | undefined {
 
-  // }
   public getEntitiesByTag(tag: string): Entity[] {
     return this.taggedEntities[tag] ? this.taggedEntities[tag] : [];
   }
@@ -159,7 +158,8 @@ export default class EntityContainer {
       this.removeEntity(canvas)
     })
   }
-  private generatenNewId(): string {
+
+  private generateNewId(): string {
     this.lastEntityId++;
     return "Entity_"+this.lastEntityId;
   }
