@@ -1,4 +1,4 @@
-import {SvgPathComponent} from '../../components'
+import {ContainerComponent, PositionComponent, SvgPathComponent} from '../../components'
 import {
     AddComponentEvent,
     FullRerenderEvent,
@@ -21,7 +21,7 @@ export default class MoveOnTopOnStartDragging extends ComponentSystem {
     public onUnMount = (): void => {
         this.unsubscribe(AddComponentEvent, this.onAddComponent)
             .unsubscribe(RemoveComponentEvent, this.onRemoveComponent)
-            .subscribe(StartDraggingEvent, this.onStartDragging);
+            .unsubscribe(StartDraggingEvent, this.onStartDragging);
     }
 
     private onStartDragging = (event: StartDraggingEvent) => {
@@ -29,14 +29,27 @@ export default class MoveOnTopOnStartDragging extends ComponentSystem {
         let currentPath: SvgPathComponent = this.entityContainer.getComponentByEntityId(event.entityId, SvgPathComponent)!;
 
         if (currentPath.getEntityId() !== firstPath.getEntityId()) {
-            currentPath.zIndex = firstPath.zIndex + 1;
+            this.moveOnTopRecursive(currentPath.getEntityId(), currentPath.zIndex, firstPath.zIndex + 1);
+
             this.dispatch(new FullRerenderEvent());
         }
     }
 
+    private moveOnTopRecursive = (entityId: string, startZIndex: number, endZIndex: number) => {
+        let container: ContainerComponent|undefined = this.entityContainer.getComponentByEntityId(entityId, ContainerComponent);
+        let path: SvgPathComponent|undefined = this.entityContainer.getComponentByEntityId(entityId, SvgPathComponent);
+        if(container) {
+            container.entities.forEach((childId) => {
+                this.moveOnTopRecursive(childId, startZIndex, endZIndex);
+            });
+        }
+
+        if(path){
+            path.zIndex += endZIndex-startZIndex;
+        }
+    }
     private onAddComponent = (event: AddComponentEvent) => {
         event.getComponent() instanceof SvgPathComponent ? this.getPathsData() : null;
-
     }
 
     private onRemoveComponent = (event: RemoveComponentEvent) => {

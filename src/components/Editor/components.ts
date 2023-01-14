@@ -51,7 +51,9 @@ export class DraggableComponent extends Component {
     public dropContainerEntityId?: string;
 }
 
-export class DropContainerComponent extends Component {
+export const ACCEPT_ALL = ["ACCEPT_ALL"];
+
+export class ContainerComponent extends Component {
     public entities: string[] = [];
-    public acceptedTags: string[] = [];
+    public acceptedTags: string[] = ACCEPT_ALL;
 }

@@ -3,7 +3,7 @@ import {
     CanvasComponent,
     DraggableComponent,
     DragState,
-    DropContainerComponent,
+    ContainerComponent,
     HtmlElementComponent,
     MAIN_CAMERA,
     MAIN_CANVAS,
@@ -17,7 +17,7 @@ import {
     DraggingEvent,
     FullRerenderEvent,
     RemoveComponentEvent,
-    StartDraggingEvent,
+    StartDraggingEvent, StopDraggingEvent,
     Vector
 } from '../../lib'
 import ComponentSystem from '../../lib/ecs/ComponentSystem'
@@ -31,7 +31,7 @@ type DraggablePathData = {
 type DropContainerData = {
     path: SvgPathComponent
     position: PositionComponent
-    dropContainer: DropContainerComponent
+    dropContainer: ContainerComponent
 };
 
 type MovingPath = {
@@ -80,11 +80,11 @@ export default class DragAndDrop extends ComponentSystem {
 
 
     private onAddComponent = (event: AddComponentEvent) => {
-        event.getComponent() instanceof DraggableComponent || event.getComponent() instanceof DropContainerComponent ? this.getPathsData() : null;
+        event.getComponent() instanceof DraggableComponent || event.getComponent() instanceof ContainerComponent ? this.getPathsData() : null;
     }
 
     private onRemoveComponent = (event: RemoveComponentEvent) => {
-        event.getComponent() instanceof DraggableComponent || event.getComponent() instanceof DropContainerComponent ? this.getPathsData() : null;
+        event.getComponent() instanceof DraggableComponent || event.getComponent() instanceof ContainerComponent ? this.getPathsData() : null;
     }
 
     private getPathsData = () => {
@@ -100,9 +100,9 @@ export default class DragAndDrop extends ComponentSystem {
             });
         });
 
-        let dropContainers: DropContainerComponent[] = this.entityContainer.getComponents(DropContainerComponent);
+        let dropContainers: ContainerComponent[] = this.entityContainer.getComponents(ContainerComponent);
         this.dropContainersData = [];
-        dropContainers.forEach((dropContainer: DropContainerComponent) => {
+        dropContainers.forEach((dropContainer: ContainerComponent) => {
             let position: PositionComponent = this.entityContainer.getEntityComponent(dropContainer.getEntityId(), PositionComponent)!;
             let path: SvgPathComponent = this.entityContainer.getEntityComponent(dropContainer.getEntityId(), SvgPathComponent)!;
             this.dropContainersData.push({
@@ -192,7 +192,7 @@ export default class DragAndDrop extends ComponentSystem {
         if (this.movingPathData) {
             let currentDropContainer = this.getCurrentDropContainer();
 
-            this.dispatch(new DraggingEvent(
+            this.dispatch(new StopDraggingEvent(
                 this.movingPathData.path.path.getEntityId(),
                 this.movingPathData.startPosition,
                 this.movingPathData.startDropContainer?.dropContainer,
@@ -277,7 +277,7 @@ export default class DragAndDrop extends ComponentSystem {
 
         let dragState = this.movingPathData.path.dragState;
         let dropContainer = dropContainerData.dropContainer;
-        let oldDropContainer: DropContainerComponent | undefined;
+        let oldDropContainer: ContainerComponent | undefined;
         if (dragState.tags.filter((dragTag: string) => dropContainer.acceptedTags.includes(dragTag)).length === 0) {
             return;
         }
@@ -286,7 +286,7 @@ export default class DragAndDrop extends ComponentSystem {
             dropContainer.entities.push(dragState.getEntityId());
 
             if (dragState.dropContainerEntityId) {
-                oldDropContainer = this.entityContainer.getEntityComponent(dragState.dropContainerEntityId, DropContainerComponent)!;
+                oldDropContainer = this.entityContainer.getEntityComponent(dragState.dropContainerEntityId, ContainerComponent)!;
                 oldDropContainer.entities.filter((entityId: string) => dragState.getEntityId() !== entityId);
             }
             dragState.dropContainerEntityId = dropContainer.getEntityId();

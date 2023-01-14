@@ -1,7 +1,7 @@
 import React from 'react'
 import {ComponentStory, ComponentMeta} from '@storybook/react'
 import {
-    CanvasComponent, DraggableComponent, DropContainerComponent,
+    CanvasComponent, DraggableComponent, ContainerComponent,
     EcsEditor,
     MAIN_CANVAS,
     MAIN_MOUSE,
@@ -28,7 +28,8 @@ import {
 } from '../systems'
 import ZoomOnWheel from '../systems/Editor/ZoomOnWheel'
 import SvgPathRender from "../systems/Editor/SvgPathRender";
-import DragAndDrop from "../systems/Editor/DragAndDrop";
+import DragAndDrop, {DROP_GLOBAL} from "../systems/Editor/DragAndDrop";
+import MoveChildrenWithDragContainer from "../systems/Editor/MoveChildrenWithDragContainer";
 
 // Component Classes
 class Position extends Component {
@@ -477,6 +478,7 @@ DragAndDropTemplate.args = {
         .initSystem(SvgPathRender)
         .initSystem(DragAndDrop)
         .initSystem(MoveOnTopOnStartDragging)
+        .initSystem(MoveChildrenWithDragContainer)
         .initSystem(EndCanvasRender)
         .initSystem(FixCameraOnWindowResize)
 }
@@ -489,14 +491,18 @@ rectPath.zIndex = 1;
 
 rectPath.strokeWidth = 2;
 
-let dropContainer = new DropContainerComponent();
+let dropContainer = new ContainerComponent();
+let draggable = new DraggableComponent();
+
+draggable.tags = [DROP_GLOBAL];
 
 dropContainer.acceptedTags = ["dropRedCircle"];
 
 entityContainerDragAndDrop.createEntity([
     new PositionComponent(),
     rectPath,
-    dropContainer
+    dropContainer,
+    draggable
 ])
 
 
@@ -506,7 +512,7 @@ rectPath.fillStyle = "blue";
 
 rectPath.strokeWidth = 2;
 
-dropContainer = new DropContainerComponent();
+dropContainer = new ContainerComponent();
 
 dropContainer.acceptedTags = ["dropGreenCircle"];
 let contPosition = new PositionComponent();
