@@ -6,4 +6,5 @@ export {default as StartCanvasRender} from './StartCanvasRender';
 export {default as EndCanvasRender} from './EndCanvasRender';
 export {default as SvgPathRender} from './SvgPathRender';
 export {default as DragAndDrop} from './DragAndDrop';
+export {default as MoveOnTopOnStartDragging} from './MoveOnTopOnStartDragging';
 export * from './State';

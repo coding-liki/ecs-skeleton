@@ -12,7 +12,14 @@ import {
     PositionComponent,
     SvgPathComponent,
 } from '../../components'
-import {AddComponentEvent, FullRerenderEvent, RemoveComponentEvent, Vector} from '../../lib'
+import {
+    AddComponentEvent,
+    DraggingEvent,
+    FullRerenderEvent,
+    RemoveComponentEvent,
+    StartDraggingEvent,
+    Vector
+} from '../../lib'
 import ComponentSystem from '../../lib/ecs/ComponentSystem'
 
 type DraggablePathData = {
@@ -31,33 +38,32 @@ type MovingPath = {
     path: DraggablePathData
     startPosition: Vector
     dragPoint: Vector
+    startDropContainer: DropContainerData | undefined
 };
 
 export const DROP_GLOBAL = "global";
 
 export default class DragAndDrop extends ComponentSystem {
-    private canvasComponent: CanvasComponent = new CanvasComponent
-    mousePositionComponent: MousePositionComponent = new MousePositionComponent
-    htmlElementComponent: HtmlElementComponent = new HtmlElementComponent
-    cameraComponent: CameraComponent = new CameraComponent
-    pathsData: DraggablePathData[] = [];
-    dropContainersData: DropContainerData[] = [];
+    private canvasComponent: CanvasComponent = new CanvasComponent;
+    private mousePositionComponent: MousePositionComponent = new MousePositionComponent;
+    private htmlElementComponent: HtmlElementComponent = new HtmlElementComponent;
+    private cameraComponent: CameraComponent = new CameraComponent;
+    private pathsData: DraggablePathData[] = [];
+    private dropContainersData: DropContainerData[] = [];
 
-    movingPathData?: MovingPath;
+    private movingPathData?: MovingPath;
 
-    public onMount(): void {
+    public onMount = (): void => {
         let mouse = this.entityContainer.getEntityByTag(MAIN_MOUSE)!;
         let camera = this.entityContainer.getEntityByTag(MAIN_CAMERA)!;
         let canvas = this.entityContainer.getEntityByTag(MAIN_CANVAS)!;
 
-        this.initComponentField("canvasComponent", canvas)
-        this.initComponentField("htmlElementComponent", camera)
-        this.initComponentField("cameraComponent", camera)
-        this.initComponentField("mousePositionComponent", mouse)
+        this.initComponentField("canvasComponent", canvas);
+        this.initComponentField("htmlElementComponent", camera);
+        this.initComponentField("cameraComponent", camera);
+        this.initComponentField("mousePositionComponent", mouse);
 
-        this.entityContainer
-            .getEventManager()
-            .subscribe(AddComponentEvent, this.onAddComponent)
+        this.subscribe(AddComponentEvent, this.onAddComponent)
             .subscribe(RemoveComponentEvent, this.onRemoveComponent);
 
         this.getPathsData();
@@ -65,10 +71,8 @@ export default class DragAndDrop extends ComponentSystem {
         this.addEvents();
     }
 
-    public onUnMount(): void {
-        this.entityContainer
-            .getEventManager()
-            .unsubscribe(AddComponentEvent, this.onAddComponent)
+    public onUnMount = (): void => {
+        this.unsubscribe(AddComponentEvent, this.onAddComponent)
             .unsubscribe(RemoveComponentEvent, this.onRemoveComponent);
 
         this.removeEvents();
@@ -76,19 +80,11 @@ export default class DragAndDrop extends ComponentSystem {
 
 
     private onAddComponent = (event: AddComponentEvent) => {
-        if (!(event.getComponent() instanceof DraggableComponent) && !(event.getComponent() instanceof DropContainerComponent)) {
-            return;
-        }
-
-        this.getPathsData();
+        event.getComponent() instanceof DraggableComponent || event.getComponent() instanceof DropContainerComponent ? this.getPathsData() : null;
     }
 
     private onRemoveComponent = (event: RemoveComponentEvent) => {
-        if (!(event.getComponent() instanceof DraggableComponent) && !(event.getComponent() instanceof DropContainerComponent)) {
-            return;
-        }
-
-        this.getPathsData();
+        event.getComponent() instanceof DraggableComponent || event.getComponent() instanceof DropContainerComponent ? this.getPathsData() : null;
     }
 
     private getPathsData = () => {
@@ -119,25 +115,25 @@ export default class DragAndDrop extends ComponentSystem {
 
     private addEvents = () => {
         if (!this.htmlElementComponent.element) {
-            setTimeout(this.addEvents)
-            return
+            setTimeout(this.addEvents);
+            return;
         }
 
-        this.htmlElementComponent.element.addEventListener('mousemove', this.onMove)
-        this.htmlElementComponent.element.addEventListener('mousedown', this.onDown)
-        this.htmlElementComponent.element.addEventListener('mouseup', this.onUp)
+        this.htmlElementComponent.element.addEventListener('mousemove', this.onMove);
+        this.htmlElementComponent.element.addEventListener('mousedown', this.onDown);
+        this.htmlElementComponent.element.addEventListener('mouseup', this.onUp);
     }
     private removeEvents = () => {
         if (!this.htmlElementComponent.element) {
             return;
         }
 
-        this.htmlElementComponent.element.removeEventListener('mousemove', this.onMove)
-        this.htmlElementComponent.element.removeEventListener('mousedown', this.onDown)
-        this.htmlElementComponent.element.removeEventListener('mouseup', this.onUp)
+        this.htmlElementComponent.element.removeEventListener('mousemove', this.onMove);
+        this.htmlElementComponent.element.removeEventListener('mousedown', this.onDown);
+        this.htmlElementComponent.element.removeEventListener('mouseup', this.onUp);
 
     }
-    onMove = (event: MouseEvent) => {
+    public onMove = (event: MouseEvent) => {
         if (!this.movingPathData) {
             return;
         }
@@ -147,24 +143,39 @@ export default class DragAndDrop extends ComponentSystem {
         coordinates.x = 0;
         coordinates.y = 0;
 
-        coordinates.add(this.mousePositionComponent.position).add(this.movingPathData.dragPoint);
-        this.entityContainer.getEventManager().dispatch(new FullRerenderEvent);
+        coordinates.plus(this.mousePositionComponent.position).plus(this.movingPathData.dragPoint);
+
+        let currentDropContainer = this.getCurrentDropContainer();
+
+        this.dispatch(new DraggingEvent(
+            this.movingPathData.path.path.getEntityId(),
+            this.movingPathData.startPosition,
+            this.movingPathData.startDropContainer?.dropContainer,
+            currentDropContainer?.dropContainer
+        ));
+
+        this.dispatch(new FullRerenderEvent);
     }
 
-    private onDown = (event: MouseEvent) => {
+    public onDown = (event: MouseEvent) => {
         if (this.movingPathData) {
             return;
         }
 
-        this.pathsData.forEach(this.tryStartDrag);
+        this.pathsData.sort((a, b) => {
+            return b.path.zIndex - a.path.zIndex;
+        }).forEach(this.tryStartDrag);
     }
 
-    private onUp = (event: MouseEvent) => {
+    public onUp = (event: MouseEvent) => {
         if (!this.movingPathData) {
             return;
         }
 
-        this.dropContainersData.forEach(this.tryDrop)
+        let currentDropContainer = this.getCurrentDropContainer();
+        if (currentDropContainer) {
+            this.tryDrop(currentDropContainer);
+        }
 
         if (!this.movingPathData) {
             return;
@@ -177,11 +188,20 @@ export default class DragAndDrop extends ComponentSystem {
         this.clearMovingPath();
     }
 
-    private clearMovingPath() {
+    private clearMovingPath = () => {
         if (this.movingPathData) {
+            let currentDropContainer = this.getCurrentDropContainer();
+
+            this.dispatch(new DraggingEvent(
+                this.movingPathData.path.path.getEntityId(),
+                this.movingPathData.startPosition,
+                this.movingPathData.startDropContainer?.dropContainer,
+                currentDropContainer?.dropContainer
+            ));
+
             this.movingPathData.path.dragState.state = DragState.NOT_DRAGGING;
             this.movingPathData = undefined;
-            this.entityContainer.getEventManager().dispatch(new FullRerenderEvent);
+            this.dispatch(new FullRerenderEvent);
         }
     }
 
@@ -200,18 +220,38 @@ export default class DragAndDrop extends ComponentSystem {
         let mousePosition = this.mousePositionComponent.position;
 
         if (context.isPointInPath(path2d, mousePosition.x, mousePosition.y)) {
+            let currentDropContainer = this.getCurrentDropContainer();
+
             this.movingPathData = {
                 path: pathData,
                 startPosition: pathData.position.coordinates.clone(),
-                dragPoint: pathData.position.coordinates.clone().sub(mousePosition)
-            }
+                dragPoint: pathData.position.coordinates.clone().sub(mousePosition),
+                startDropContainer: currentDropContainer
+            };
             pathData.dragState.state = DragState.DRAGGING;
+
+            this.dispatch(new StartDraggingEvent(
+                pathData.path.getEntityId(),
+                this.movingPathData.startPosition,
+                currentDropContainer?.dropContainer,
+                currentDropContainer?.dropContainer
+            ));
+        } else {
+            pathData.dragState.state = DragState.NOT_DRAGGING;
         }
     }
 
-    private tryDrop = (dropContainerData: DropContainerData) => {
+    private getCurrentDropContainer = (): DropContainerData | undefined => {
+        let filteredContainers = this.dropContainersData.sort((a, b) => {
+            return a.path.zIndex - b.path.zIndex;
+        }).filter(this.isInDropContainer);
+
+        return filteredContainers[filteredContainers.length - 1];
+    }
+
+    private isInDropContainer = (dropContainerData: DropContainerData): boolean => {
         if (!this.canvasComponent.canvas || !this.movingPathData) {
-            return;
+            return false;
         }
 
         let path2d = new Path2D();
@@ -223,9 +263,18 @@ export default class DragAndDrop extends ComponentSystem {
         let context = this.canvasComponent.canvas.getContext('2d')!;
 
         let mousePosition = this.mousePositionComponent.position;
-        if (!context.isPointInPath(path2d, mousePosition.x, mousePosition.y)) {
+        return context.isPointInPath(path2d, mousePosition.x, mousePosition.y);
+    }
+
+    private tryDrop = (dropContainerData: DropContainerData) => {
+        if (!this.canvasComponent.canvas || !this.movingPathData) {
             return;
         }
+
+        if (!this.isInDropContainer(dropContainerData)) {
+            return;
+        }
+
         let dragState = this.movingPathData.path.dragState;
         let dropContainer = dropContainerData.dropContainer;
         let oldDropContainer: DropContainerComponent | undefined;

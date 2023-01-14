@@ -8,21 +8,21 @@ export default class FixCameraOnWindowResize extends ComponentSystem {
     htmlElementComponent: HtmlElementComponent = new HtmlElementComponent;
     canvasComponent: CanvasComponent = new CanvasComponent;
 
-    public onMount(): void {
-        let camera = this.entityContainer.getEntityByTag(MAIN_CAMERA);
-        let canvas = this.entityContainer.getEntityByTag(MAIN_CANVAS);
+    public onMount = (): void => {
+        let camera = this.entityContainer.getEntityByTag(MAIN_CAMERA)!;
+        let canvas = this.entityContainer.getEntityByTag(MAIN_CANVAS)!;
 
-        this.htmlElementComponent = this.entityContainer.getEntityComponent<HtmlElementComponent>(camera!, HtmlElementComponent)!;
-        this.cameraComponent = this.entityContainer.getEntityComponent<CameraComponent>(camera!, CameraComponent)!;
-        this.canvasComponent = this.entityContainer.getEntityComponent<CanvasComponent>(canvas!, CanvasComponent)!;
+        this.initComponentField("htmlElementComponent", camera);
+        this.initComponentField("cameraComponent", camera);
+        this.initComponentField("canvasComponent", canvas);
 
         window.onresize = () => {
             this.onWindowResize();
         }
-        this.onWindowResize(true)
+        this.onWindowResize(true);
     }
 
-    onWindowResize = (needDelay: boolean = false) => {
+    public onWindowResize = (needDelay: boolean = false) => {
         if (!this.htmlElementComponent.element || !this.cameraComponent.camera || !this.canvasComponent.canvas) {
             setTimeout(this.onWindowResize);
             return;
@@ -35,7 +35,7 @@ export default class FixCameraOnWindowResize extends ComponentSystem {
         let width = window.innerWidth - parseFloat(computedStyle.paddingTop) - parseFloat(computedStyle.paddingBottom) - editorRect.left;
         let height = window.innerHeight - parseFloat(computedStyle.paddingLeft) - parseFloat(computedStyle.paddingRight) - editorRect.top;
 
-        let newPosition = this.cameraComponent.camera.position.clone().subXY(width / 2, height / 2);
+        let newPosition = this.cameraComponent.camera.position.clone().sub(width / 2, height / 2);
         newPosition.z = -1;
 
         let newDimensions = new Vector(width, height);
@@ -44,14 +44,14 @@ export default class FixCameraOnWindowResize extends ComponentSystem {
 
         if (needDelay) {
             setTimeout(() => {
-                this.entityContainer.getEventManager().dispatch(new FullRerenderEvent);
+                this.dispatch(new FullRerenderEvent);
             });
         } else {
-            this.entityContainer.getEventManager().dispatch(new FullRerenderEvent)
+            this.dispatch(new FullRerenderEvent);
         }
     }
 
-    public onUnMount(): void {
+    public onUnMount = (): void => {
         window.onresize = null;
     }
 }

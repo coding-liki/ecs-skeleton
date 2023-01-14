@@ -12,12 +12,11 @@ import ComponentSystem from "../../lib/ecs/ComponentSystem";
 export default class StartCanvasRender extends ComponentSystem {
     private cameraComponent: CameraComponent = new CameraComponent;
     private canvasComponent: CanvasComponent = new CanvasComponent;
+    private mousePositionComponent: MousePositionComponent = new MousePositionComponent;
 
     private canvasViewbox?: CanvasViewBox;
 
-    mousePositionComponent: MousePositionComponent = new MousePositionComponent;
-
-    public onMount(): void {
+    public onMount = (): void => {
         let camera = this.entityContainer.getEntityByTag(MAIN_CAMERA)!;
         let canvas = this.entityContainer.getEntityByTag(MAIN_CANVAS)!;
         let mouse = this.entityContainer.getEntityByTag(MAIN_MOUSE)!;
@@ -27,7 +26,7 @@ export default class StartCanvasRender extends ComponentSystem {
         this.initComponentField("canvasComponent", canvas);
     }
 
-    public render(): void {
+    public render = (): void => {
         if (!this.cameraComponent.camera || !this.canvasComponent.canvas) {
             return;
         }
@@ -36,6 +35,7 @@ export default class StartCanvasRender extends ComponentSystem {
         if (!context2d) {
             return;
         }
+
         this.canvasViewbox = new CanvasViewBox(context2d, this.canvasComponent.scaleMode);
 
         let width = this.canvasComponent.canvas.width, height = this.canvasComponent.canvas.height;

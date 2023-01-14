@@ -11,5 +11,14 @@ module.exports = {
   "framework": "@storybook/react",
   "core": {
     "builder": "@storybook/builder-webpack5"
-  }
+  },
+  babel: async (options) => {
+    return {
+      ...options,
+      plugins: [
+        ['@babel/plugin-transform-typescript', { isTSX: true }],
+        ...options.plugins,
+      ],
+    };
+  },
 }

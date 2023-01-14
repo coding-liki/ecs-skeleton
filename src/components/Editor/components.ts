@@ -34,6 +34,7 @@ export class MouseEventComponent extends Component {
 
 export class SvgPathComponent extends Component {
     public path: string = "";
+    public zIndex: number = 0;
     public fillStyle: string | CanvasGradient | CanvasPattern = "black";
     public strokeStyle: string | CanvasGradient | CanvasPattern = "black";
     public strokeWidth: number = 4;

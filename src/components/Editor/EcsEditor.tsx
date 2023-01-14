@@ -1,4 +1,4 @@
-import React, {Fragment, RefObject} from 'react'
+import React, {Fragment} from 'react'
 import {
     Camera,
     EndedRenderEvent,
@@ -27,45 +27,39 @@ export default class EcsEditor extends React.Component<Props, State> {
 
     constructor(props: Props) {
         super(props);
-        // this.init();
     }
 
     init = () => {
         this.cameraComponent.camera = new Camera(new Vector(0, 0, -1), new Viewbox(new Vector(0, 0), new Vector(500, 500)));
 
-        this.refillCameraEntity()
-
-        this.refillMouseEntity()
-
+        this.refillCameraEntity();
+        this.refillMouseEntity();
     }
 
-    private refillMouseEntity() {
-
+    private refillMouseEntity = () => {
         this.props.entityContainer.removeEntitiesWithTag(MAIN_MOUSE);
 
         this.props.entityContainer.createEntity([
             new MousePositionComponent,
             new MouseEventComponent,
-        ], [MAIN_MOUSE])
+        ], [MAIN_MOUSE]);
     }
 
-    private refillCameraEntity() {
-
+    private refillCameraEntity = () => {
         this.props.entityContainer.removeEntitiesWithTag(MAIN_CAMERA);
 
         this.cameraEntity = this.props.entityContainer.createEntity([
             this.cameraComponent,
             this.htmlElementComponent
-        ], [MAIN_CAMERA])
+        ], [MAIN_CAMERA]);
     }
 
-    componentDidMount() {
+    public componentDidMount = () => {
         if (!this.props.entityContainer || !this.props.systemContainer) {
             this.forceUpdate();
 
             return;
         }
-
 
         this.init();
 
@@ -82,33 +76,29 @@ export default class EcsEditor extends React.Component<Props, State> {
         this.forceUpdate();
     }
 
-    rerender = (event?: RerenderEvent) => {
-        this.props.systemContainer.getActive().forEach((system) => {
-            system.render()
-        })
+    public rerender = (event?: RerenderEvent) => {
+        this.props.systemContainer.getActive().forEach(system => system.render());
 
-        this.props.entityContainer.getEventManager().dispatch(new EndedRenderEvent)
+        this.props.entityContainer.getEventManager().dispatch(new EndedRenderEvent);
     }
 
-    componentWillUnmount() {
+    public componentWillUnmount = () => {
         if (!this.props.entityContainer || !this.props.systemContainer) {
             return;
         }
-        this.props.systemContainer.getAll().forEach((system) => system.onUnMount())
+        this.props.systemContainer.getAll().forEach((system) => system.onUnMount());
 
         this.props.entityContainer.getEventManager().unsubscribe(FullRerenderEvent, this.fullRerender);
         this.props.entityContainer.getEventManager().unsubscribe(RerenderEvent, this.rerender);
     }
 
-    fullRerender = (event: FullRerenderEvent) => {
-        this.forceUpdate()
+    public fullRerender = (event: FullRerenderEvent) => {
+        this.forceUpdate();
     }
 
-    componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any): void {
-        this.rerender();
-    }
+    public componentDidUpdate = (prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any): void => this.rerender();
 
-    render(): React.ReactNode {
+    public render = (): React.ReactNode => {
         if (!this.props.entityContainer || !this.props.systemContainer) {
             return;
         }

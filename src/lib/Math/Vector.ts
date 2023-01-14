@@ -4,67 +4,61 @@ export interface Coordinates {
     z: number;
 }
 
-export class Vector implements Coordinates{
-    x: number = 0;
-    y: number = 0;
-    z: number = 0;
+type Div = {
+    (vector: Coordinates): Vector;
+    (scalar: number): Vector;
+};
 
+type ObjectOrCords = {
+    (b: Coordinates): Vector;
+    (x: number, y: number): Vector;
+    (x: number, y: number, z: number): Vector;
+}
+
+export class Vector implements Coordinates {
     static sinValues: { [key: string]: number } = {};
     static cosValues: { [key: string]: number } = {};
     static acosValues: { [key: string]: number } = {};
     static atanValues: { [key: string]: number } = {};
 
-    constructor(x: number = 0, y: number = 0, z: number = 0) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
+    constructor(public x: number = 0, public y: number = 0, public z: number = 0) {
     }
 
-    static fromCoordinates(a: Coordinates): Vector  {
-        return new Vector(a.x, a.y, a.z);
-    }
+    public static fromCoordinates = (a: Coordinates): Vector => new Vector(a.x, a.y, a.z);
 
-    length(): number {
-        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-    }
+    public length = (): number => Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
 
-    norm(): Vector {
-        this.div(this.length());
+    public norm = (): Vector => this.div(this.length());
+
+    public plus: ObjectOrCords = (x: number | Coordinates, y?: number, z?: number): Vector => {
+        if (typeof x === "number") {
+            this.x += x;
+            this.y += y ? y : 0;
+            this.z += z ? z : 0;
+        } else {
+            this.x += x.x;
+            this.y += x.y;
+            this.z += x.z;
+        }
 
         return this;
     }
 
-    addXY(x: number, y: number): Vector {
-        this.x += x;
-        this.y += y;
+    public sub: ObjectOrCords = (x: number | Coordinates, y?: number, z?: number): Vector => {
+        if (typeof x === "number") {
+            this.x -= x;
+            this.y -= y ? y : 0;
+            this.z -= z ? z : 0;
+        } else {
+            this.x -= x.x;
+            this.y -= x.y;
+            this.z -= x.z;
+        }
 
         return this;
     }
 
-    add(b: Vector): Vector {
-        this.x += b.x;
-        this.y += b.y;
-        this.z += b.z;
-
-        return this;
-    }
-
-    subXY(x: number, y: number): Vector {
-        this.x -= x;
-        this.y -= y;
-
-        return this;
-    }
-
-    sub(b: Vector): Vector {
-        this.x -= b.x;
-        this.y -= b.y;
-        this.z -= b.z;
-
-        return this;
-    }
-
-    mul(scalar: number): Vector {
+    public mul = (scalar: number): Vector => {
         this.x *= scalar;
         this.y *= scalar;
         this.z *= scalar;
@@ -72,15 +66,24 @@ export class Vector implements Coordinates{
         return this;
     }
 
-    div(scalar: number): Vector {
-        this.x /= scalar;
-        this.y /= scalar;
-        this.z /= scalar;
 
+    public div: Div = (operand: number | Coordinates): Vector => {
+        if (typeof operand !== 'number') {
+            this.x /= this.oneIfZero(operand.x);
+            this.y /= this.oneIfZero(operand.y);
+            this.z /= this.oneIfZero(operand.z);
+        } else {
+            operand = this.oneIfZero(operand);
+            this.x /= operand;
+            this.y /= operand;
+            this.z /= operand;
+        }
         return this;
     }
 
-    rotate(center: Vector, angle: number): Vector {
+    private oneIfZero = (toCheck: number): number => toCheck === 0 ? 1 : toCheck;
+
+    public rotate = (center: Vector, angle: number): Vector => {
         let sin = Vector.sin(angle)
         let cos = Vector.cos(angle)
 
@@ -91,16 +94,14 @@ export class Vector implements Coordinates{
 
         this.x = newX;
         this.y = newY;
-        this.add(center);
+        this.plus(center);
 
         return this;
     }
 
-    clone(): Vector {
-        return new Vector(this.x, this.y, this.z);
-    }
+    public clone = (): Vector => new Vector(this.x, this.y, this.z);
 
-    static sin(angle: number): number {
+    public static sin = (angle: number): number => {
         if (!Vector.sinValues[angle]) {
             Vector.sinValues[angle] = Math.sin(angle);
             Vector.cosValues[angle] = Math.cos(angle);
@@ -108,7 +109,7 @@ export class Vector implements Coordinates{
         return Vector.sinValues[angle];
     }
 
-    static cos(angle: number): number {
+    public static cos = (angle: number): number => {
         if (!Vector.sinValues[angle]) {
             Vector.sinValues[angle] = Math.sin(angle);
             Vector.cosValues[angle] = Math.cos(angle);
@@ -116,14 +117,14 @@ export class Vector implements Coordinates{
         return Vector.cosValues[angle];
     }
 
-    static acos(value: number): number {
+    public static acos = (value: number): number => {
         if (!Vector.acosValues[value]) {
             Vector.acosValues[value] = Math.acos(value);
         }
         return Vector.acosValues[value];
     }
 
-    static atan(value: number): number {
+    public static atan = (value: number): number => {
         if (!Vector.atanValues[value]) {
             Vector.atanValues[value] = Math.atan(value);
         }

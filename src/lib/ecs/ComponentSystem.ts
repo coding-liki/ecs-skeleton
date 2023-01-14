@@ -2,16 +2,16 @@ import EntityContainer from "./EntityContainer";
 import {ComponentSystemInterface} from "./interfaces";
 import Entity from "./Entity";
 import React from "react";
+import {Event} from "@coding-liki/event-manager";
 
+interface eventCallback {
+    (event: any): void;
+}
 
 export default class ComponentSystem implements ComponentSystemInterface {
-    protected entityContainer: EntityContainer;
     protected isSystemActive: boolean = true;
-    name: string;
 
-    public constructor(entityContainer: EntityContainer, name: string) {
-        this.entityContainer = entityContainer;
-        this.name = name;
+    public constructor(protected entityContainer: EntityContainer, public name: string) {
     }
 
     public initComponentField = (fieldRef: string, entity: string | Entity) => {
@@ -23,37 +23,49 @@ export default class ComponentSystem implements ComponentSystemInterface {
         }
     }
 
-    getName(): string {
-        return this.name;
+    public subscribe = (eventClass: Function, handler: eventCallback): this => {
+        this.entityContainer
+            .getEventManager()
+            .subscribe(eventClass, handler);
+
+        return this;
     }
 
-    setName(name: string): void {
+    public unsubscribe = (eventClass: Function, handler: eventCallback): this => {
+        this.entityContainer
+            .getEventManager()
+            .unsubscribe(eventClass, handler);
+
+        return this;
+    }
+
+    public dispatch = (event: Event): void => this.entityContainer.getEventManager().dispatch(event);
+
+    public getName = (): string  => this.name;
+
+    public setName = (name: string): void =>  {
         this.name = name;
     }
 
-    isActive(): boolean {
-        return this.isSystemActive;
-    }
+    public isActive = (): boolean => this.isSystemActive;
 
-    turnOn(): void {
+    public turnOn = (): void => {
         this.isSystemActive = true;
     }
 
-    turnOff(): void {
+    public turnOff = (): void => {
         this.isSystemActive = false;
     }
 
-    render(): void {
+    public render = (): void  => {
         return;
     }
 
-    reactRender(): React.ReactNode {
-        return;
+    public reactRender = (): React.ReactNode =>  undefined;
+
+    public onMount = (): void => {
     }
 
-    public onMount(): void {
-    }
-
-    public onUnMount(): void {
+    public onUnMount = (): void => {
     }
 }

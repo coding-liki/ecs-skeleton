@@ -9,70 +9,59 @@ type ComponentSystemConstructor = {
 };
 
 export default class SystemContainer implements SystemContainerInterface {
-    private entityContainer: EntityContainer;
-    private systemsByClass: { [key: string]: ComponentSystemInterface[] } = {}
-    private systemsByName: { [key: string]: ComponentSystemInterface } = {}
+    private systemsByClass: { [key: string]: ComponentSystemInterface[] } = {};
+    private systemsByName: { [key: string]: ComponentSystemInterface } = {};
     private allSystems: ComponentSystemInterface[] = [];
     private activeSystems: ComponentSystemInterface[] = [];
 
-    constructor(entityContainer: EntityContainer) {
-        this.entityContainer = entityContainer;
+    constructor(private entityContainer: EntityContainer) {
         this.initEvents();
     }
 
-
-    initEvents = () => {
+    private initEvents = () => {
         this.entityContainer.getEventManager().subscribe(TurnOnSystemByName, this.turnOnSystemByName);
         this.entityContainer.getEventManager().subscribe(TurnOffSystemByName, this.turnOffSystemByName);
         this.entityContainer.getEventManager().subscribe(TurnOnSystemByClass, this.turnOnSystemByClass);
         this.entityContainer.getEventManager().subscribe(TurnOffSystemByClass, this.turnOffSystemByClass);
     }
-    turnOnSystemByName = (event: TurnOnSystemByName) => {
+    public turnOnSystemByName = (event: TurnOnSystemByName) => {
         this.getByName(event.getName())!.turnOn();
         this.refillActive();
     }
-    turnOffSystemByName = (event: TurnOffSystemByName) => {
+    public turnOffSystemByName = (event: TurnOffSystemByName) => {
         this.getByName(event.getName())!.turnOff();
 
         this.refillActive();
-
     }
-    turnOnSystemByClass = (event: TurnOnSystemByClass) => {
+
+    public turnOnSystemByClass = (event: TurnOnSystemByClass) => {
         this.getByClass(event.getClassName())!.forEach((system) => system.turnOn());
 
         this.refillActive();
 
     }
-    turnOffSystemByClass = (event: TurnOffSystemByClass) => {
+    public turnOffSystemByClass = (event: TurnOffSystemByClass) => {
         this.getByClass(event.getClassName())!.forEach((system) => system.turnOff());
 
         this.refillActive();
     }
 
 
-    getActive(): ComponentSystemInterface[] {
-        return this.activeSystems;
-    }
+    public getActive = (): ComponentSystemInterface[] => this.activeSystems;
 
-    getAll(): ComponentSystemInterface[] {
-        return this.allSystems;
-    }
+    public getAll = (): ComponentSystemInterface[] => this.allSystems;
 
-    getByName(name: string): ComponentSystemInterface | undefined {
-        return this.systemsByName[name];
-    }
+    public getByName = (name: string): ComponentSystemInterface | undefined => this.systemsByName[name];
 
-    getByClass<SystemClass extends ComponentSystemInterface>(className: Function): SystemClass[] | undefined {
-        return this.systemsByClass[className.name] as SystemClass[];
+    public getByClass = <SystemClass extends ComponentSystemInterface>(className: Function): SystemClass[] | undefined =>
+        this.systemsByClass[className.name] as SystemClass[];
 
-    }
-
-    getFirstByClass<SystemClass extends ComponentSystemInterface>(className: Function): SystemClass | undefined {
+    public getFirstByClass = <SystemClass extends ComponentSystemInterface>(className: Function): SystemClass | undefined => {
         let systems = this.getByClass<SystemClass>(className)!;
         return systems[0] as SystemClass;
     }
 
-    public initSystem(className: ComponentSystemConstructor, name: string = NO_NAME): SystemContainerInterface {
+    public initSystem = (className: ComponentSystemConstructor, name: string = NO_NAME): SystemContainerInterface => {
         let system = new className(this.entityContainer, name);
 
         system.turnOn();
@@ -84,17 +73,17 @@ export default class SystemContainer implements SystemContainerInterface {
         return this;
     }
 
-    private refillActive() {
+    private refillActive = () => {
         this.activeSystems = this.allSystems.filter((system) => system.isActive());
     }
 
-    private registerSystem(system: ComponentSystemInterface, className: Function): void {
+    private registerSystem = (system: ComponentSystemInterface, className: Function): void => {
         if (!this.systemsByClass[className.name]) {
             this.systemsByClass[className.name] = [];
         }
 
         if (!this.systemsByClass[className.name].includes(system)) {
-            this.systemsByClass[className.name].push(system)
+            this.systemsByClass[className.name].push(system);
         }
 
         let systemsCount = this.systemsByClass[className.name].length;
@@ -108,6 +97,4 @@ export default class SystemContainer implements SystemContainerInterface {
             this.allSystems.push(system);
         }
     }
-
-
 }

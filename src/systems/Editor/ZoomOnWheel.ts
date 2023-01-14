@@ -3,41 +3,39 @@ import {RerenderEvent} from "../../lib";
 import ComponentSystem from "../../lib/ecs/ComponentSystem";
 
 export default class ZoomOnWheel extends ComponentSystem {
-    cameraComponent: CameraComponent = new CameraComponent;
-    htmlElementComponent: HtmlElementComponent = new HtmlElementComponent;
+    private cameraComponent: CameraComponent = new CameraComponent;
+    private htmlElementComponent: HtmlElementComponent = new HtmlElementComponent;
+    private mousePositionComponent: MousePositionComponent = new MousePositionComponent;
 
-    mousePositionComponent: MousePositionComponent = new MousePositionComponent;
-
-    public onMount(): void {
-
+    public onMount = (): void => {
         let camera = this.entityContainer.getEntityByTag(MAIN_CAMERA)!;
         let mouse = this.entityContainer.getEntityByTag(MAIN_MOUSE)!;
 
-        this.initComponentField("htmlElementComponent", camera)
-        this.initComponentField("cameraComponent", camera)
-        this.initComponentField("mousePositionComponent", mouse)
+        this.initComponentField("htmlElementComponent", camera);
+        this.initComponentField("cameraComponent", camera);
+        this.initComponentField("mousePositionComponent", mouse);
 
         this.addWheelHandler();
     }
 
-    public onUnMount(): void {
+    public onUnMount = (): void => {
         this.removeWheelHandler();
     }
 
-    private addWheelHandler = () => {
+    private addWheelHandler = (): void => {
         if (!this.htmlElementComponent.element) {
             setTimeout(this.addWheelHandler);
             return;
         }
 
-        this.htmlElementComponent.element.addEventListener('wheel', this.onWheel)
+        this.htmlElementComponent.element.addEventListener('wheel', this.onWheel);
     }
 
-    private removeWheelHandler() {
+    private removeWheelHandler = (): void => {
         if (!this.htmlElementComponent.element) {
             return;
         }
-        this.htmlElementComponent.element.removeEventListener('wheel', this.onWheel)
+        this.htmlElementComponent.element.removeEventListener('wheel', this.onWheel);
     }
 
     private onWheel = (event: WheelEvent) => {
@@ -45,9 +43,7 @@ export default class ZoomOnWheel extends ComponentSystem {
             return;
         }
 
-        let delta = event.deltaY * (-0.0015);
-        this.cameraComponent.camera.zoom(this.mousePositionComponent.position, delta);
-        this.entityContainer.getEventManager().dispatch(new RerenderEvent);
+        this.cameraComponent.camera.zoom(this.mousePositionComponent.position, event.deltaY * (-0.0015));
+        this.dispatch(new RerenderEvent);
     }
-
 }

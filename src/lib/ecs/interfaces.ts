@@ -1,3 +1,5 @@
+import React from "react";
+
 export interface ComponentSystemInterface {
     turnOn(): void;
     turnOff(): void;
@@ -10,7 +12,6 @@ export interface ComponentSystemInterface {
     setName(name: string): void;
 }
 
-
 export interface SystemContainerInterface {
     initSystem(className: Function, name?: string): SystemContainerInterface;
     getActive(): ComponentSystemInterface[];
@@ -18,5 +19,4 @@ export interface SystemContainerInterface {
     getByName(name: string): ComponentSystemInterface|undefined;
     getByClass<SystemClass extends ComponentSystemInterface >(className: Function): SystemClass[]|undefined;
     getFirstByClass<SystemClass extends ComponentSystemInterface >(className: Function): SystemClass|undefined;
-
 }

@@ -1,81 +1,66 @@
-import { Event } from '@coding-liki/event-manager'
-import { ComponentInterface } from './Component'
+import {Event} from '@coding-liki/event-manager'
+import {ComponentInterface} from './Component'
+import {DropContainerComponent} from "../../components";
+import {Vector} from "../Math";
 
 export class AddComponentEvent extends Event {
-  private component: ComponentInterface
+    public constructor(private component: ComponentInterface) {
+        super()
+    }
 
-  public constructor(component: ComponentInterface) {
-    super()
-    this.component = component
-  }
-
-  public getComponent = (): ComponentInterface => {
-    return this.component
-  }
+    public getComponent = (): ComponentInterface => this.component;
 }
 
-export class RemoveComponentEvent extends Event {
-  private component: ComponentInterface
-
-  public constructor(component: ComponentInterface) {
-    super()
-    this.component = component
-  }
-
-  public getComponent = (): ComponentInterface => {
-    return this.component
-  }
+export class RemoveComponentEvent extends AddComponentEvent {
 }
 
+export class RerenderEvent extends Event {
+}
 
-export class RerenderEvent extends Event { }
-export class FullRerenderEvent extends Event { }
-export class EndedRenderEvent extends Event { }
+export class FullRerenderEvent extends Event {
+}
+
+export class EndedRenderEvent extends Event {
+}
 
 export class TurnOnSystemByName extends Event {
-  private name: string
-  constructor(name: string) {
-    super();
-    this.name = name
-  }
+    constructor(private name: string) {
+        super();
+    }
 
-  public getName(): string {
-    return this.name;
-  }
+    public getName = (): string => this.name;
 }
 
-export class TurnOffSystemByName extends Event {
-  private name: string
-  constructor(name: string) {
-    super();
-    this.name = name
-  }
-
-  public getName(): string {
-    return this.name;
-  }
+export class TurnOffSystemByName extends TurnOnSystemByName {
 }
 
 export class TurnOnSystemByClass extends Event {
-  private className: Function
-  constructor(className: Function) {
-    super();
-    this.className = className
-  }
+    constructor(private className: Function) {
+        super();
+    }
 
-  public getClassName(): Function {
-    return this.className;
-  }
+    public getClassName = (): Function => this.className;
 }
 
-export class TurnOffSystemByClass extends Event {
-  private className: Function
-  constructor(className: Function) {
-    super();
-    this.className = className
-  }
+export class TurnOffSystemByClass extends TurnOnSystemByClass {
+}
 
-  public getClassName(): Function {
-    return this.className;
-  }
+export class DragAndDropEvent extends Event {
+    constructor(
+        public readonly entityId: string,
+        public readonly startPosition: Vector,
+        public readonly startDropContainer: DropContainerComponent | undefined,
+        public readonly currentDropContainer: DropContainerComponent | undefined
+    ) {
+        super();
+    }
+}
+
+export class StartDraggingEvent extends DragAndDropEvent {
+}
+
+export class DraggingEvent extends DragAndDropEvent {
+}
+
+export class StopDraggingEvent   extends DragAndDropEvent {
 }

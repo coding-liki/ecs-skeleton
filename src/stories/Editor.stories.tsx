@@ -22,7 +22,7 @@ import {
 import {
     EndCanvasRender,
     FixCameraOnWindowResize,
-    MousePositionCapture,
+    MousePositionCapture, MoveOnTopOnStartDragging,
     RenderCanvas,
     StartCanvasRender
 } from '../systems'
@@ -64,7 +64,7 @@ class RenderCircle extends ComponentSystem {
     private drawFlags: DrawCircle[] = [];
     private drawComponents: { [key: string]: { position: Position, radius: Radius, color: Color } } = {};
 
-    public onMount(): void {
+    public onMount = (): void => {
         let canvas = this.entityContainer.getEntityByTag(MAIN_CANVAS);
 
         this.canvasComponent = this.entityContainer.getEntityComponent<CanvasComponent>(canvas!, CanvasComponent)!;
@@ -77,7 +77,7 @@ class RenderCircle extends ComponentSystem {
 
     }
 
-    public onUnMount(): void {
+    public onUnMount = (): void => {
         this.entityContainer
             .getEventManager()
             .unsubscribe(AddComponentEvent, this.onAddComponent)
@@ -179,7 +179,7 @@ class RenderMousePosition extends ComponentSystem {
     private canvasComponent: CanvasComponent = new CanvasComponent;
     private context?: CanvasRenderingContext2D;
 
-    public onMount(): void {
+    public onMount = (): void => {
         let canvas = this.entityContainer.getEntityByTag(MAIN_CANVAS);
         let mouse = this.entityContainer.getEntityByTag(MAIN_MOUSE)
 
@@ -214,7 +214,7 @@ class RenderMousePosition extends ComponentSystem {
 class MoveCircles extends ComponentSystem {
     positionComponents: Position[] = []
 
-    public onMount(): void {
+    public onMount = (): void => {
         this.positionComponents =
             this.entityContainer.getComponents<Position>(Position)
         setInterval(this.move)
@@ -251,7 +251,7 @@ class FrameRateCalculatorAndRenderer extends ComponentSystem {
     private minRate = 1000000;
     private frameCount = 0;
 
-    public onMount(): void {
+    public onMount = (): void => {
         let canvas = this.entityContainer.getEntityByTag(MAIN_CANVAS);
 
         this.canvasComponent = this.entityContainer.getEntityComponent<CanvasComponent>(canvas!, CanvasComponent)!;
@@ -280,7 +280,7 @@ class FrameRateCalculatorAndRenderer extends ComponentSystem {
         this.entityContainer.createEntity([this.frameRateComponent], [FRAME_RATE])
     }
 
-    render(): void {
+    public render = (): void => {
         this.frameCount++;
         if (this.frameCount % 300 === 0) {
             this.frameCount = 0;
@@ -312,7 +312,7 @@ class FrameRateCalculatorAndRenderer extends ComponentSystem {
 }
 
 class LeftButtonsContainer extends ComponentSystem {
-    reactRender(): React.ReactNode {
+    public reactRender = (): React.ReactNode => {
         return <div style={{
             width: '100px',
             flexShrink: 0,
@@ -327,7 +327,7 @@ class StopRenderCirclesButtonContainer extends ComponentSystem {
     off = false;
     move = false;
 
-    reactRender(): React.ReactNode {
+    public reactRender = (): React.ReactNode => {
         return <div style={{
             width: '100px',
             flexShrink: 0,
@@ -476,14 +476,16 @@ DragAndDropTemplate.args = {
         .initSystem(ZoomOnWheel)
         .initSystem(SvgPathRender)
         .initSystem(DragAndDrop)
+        .initSystem(MoveOnTopOnStartDragging)
         .initSystem(EndCanvasRender)
         .initSystem(FixCameraOnWindowResize)
 }
 
 
 let rectPath = new SvgPathComponent();
-rectPath.path = "m0,0 150,0 150,50 0,50z";
+rectPath.path = "m0,0 100,0 0,-100 -100,0 z";
 rectPath.fillStyle = "yellow";
+rectPath.zIndex = 1;
 
 rectPath.strokeWidth = 2;
 
@@ -499,7 +501,7 @@ entityContainerDragAndDrop.createEntity([
 
 
 rectPath = new SvgPathComponent();
-rectPath.path = "m0,0 100,0 100,50 0,50z";
+rectPath.path = "m0,0 100,0 0,-100 -100,0 z";
 rectPath.fillStyle = "blue";
 
 rectPath.strokeWidth = 2;
@@ -508,7 +510,9 @@ dropContainer = new DropContainerComponent();
 
 dropContainer.acceptedTags = ["dropGreenCircle"];
 let contPosition = new PositionComponent();
-contPosition.coordinates.addXY(100,100);
+
+contPosition.coordinates.plus(200, 200);
+
 entityContainerDragAndDrop.createEntity([
     contPosition,
     rectPath,
@@ -541,16 +545,16 @@ async function addCircles(entityContainer: EntityContainer) {
         ])
 
         let path = new SvgPathComponent();
-        path.path = ' m -'+radius.radius+', 0\n' +
-            'a '+radius.radius+','+radius.radius+' 0 1,0 '+(radius.radius*2)+',0\n' +
-            'a '+radius.radius+','+radius.radius+' 0 1,0 -'+(radius.radius*2)+',0';
+        path.path = ' m -' + radius.radius + ', 0\n' +
+            'a ' + radius.radius + ',' + radius.radius + ' 0 1,0 ' + (radius.radius * 2) + ',0\n' +
+            'a ' + radius.radius + ',' + radius.radius + ' 0 1,0 -' + (radius.radius * 2) + ',0';
         path.fillStyle = color.fill
         path.strokeStyle = "black"
 
         let coords = new PositionComponent();
         coords.coordinates = new Vector(position.x, position.y);
         let draggable = new DraggableComponent();
-        if (color.fill === 'green'){
+        if (color.fill === 'green') {
             draggable.tags.push("dropGreenCircle");
         } else {
             draggable.tags.push("dropRedCircle");

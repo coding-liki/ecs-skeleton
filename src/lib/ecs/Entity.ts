@@ -7,20 +7,14 @@ export default class Entity {
     this.tags = tags;
   }
 
-  public getId = (): string | undefined => {
-    return this.id
-  }
+    public getId = (): string | undefined => this.id;
+    public setId = (id: string) => {
+        this.id = id
+    }
 
-  public setId = (id: string) => {
-    this.id = id
-  }
-
-  public getTags = (): string[] | undefined => {
-    return this.tags
-  }
-
-  public setTags = (tags: string[]) => {
-    this.tags = tags
-  }
+    public getTags = (): string[] | undefined => this.tags;
+    public setTags = (tags: string[]) => {
+        this.tags = tags
+    }
 }
 
