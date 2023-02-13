@@ -1,7 +1,5 @@
 import {Event} from '@coding-liki/event-manager'
 import {ComponentInterface} from './Component'
-import {ContainerComponent} from "../../components";
-import {Vector} from "../Math";
 
 export class AddComponentEvent extends Event {
     public constructor(private component: ComponentInterface) {
@@ -43,24 +41,4 @@ export class TurnOnSystemByClass extends Event {
 }
 
 export class TurnOffSystemByClass extends TurnOnSystemByClass {
-}
-
-export class DragAndDropEvent extends Event {
-    constructor(
-        public readonly entityId: string,
-        public readonly startPosition: Vector,
-        public readonly startDropContainer: ContainerComponent | undefined,
-        public readonly currentDropContainer: ContainerComponent | undefined
-    ) {
-        super();
-    }
-}
-
-export class StartDraggingEvent extends DragAndDropEvent {
-}
-
-export class DraggingEvent extends DragAndDropEvent {
-}
-
-export class StopDraggingEvent   extends DragAndDropEvent {
 }

@@ -1,4 +1,2 @@
 export * from './components'; 
-export * from './lib'; 
-export * from './systems'; 
-
+export * from './lib';

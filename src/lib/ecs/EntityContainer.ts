@@ -5,6 +5,18 @@ import {AddComponentEvent, RemoveComponentEvent} from './events'
 
 type ComponentOrAny = Component | any;
 
+export interface Class<T> {
+    new(...args: any[]): T;
+}
+
+function cast<T>(TheClass: Class<T>, obj: any): T {
+    if (!(obj instanceof TheClass)) {
+        throw new Error(`Not an instance of ${TheClass.name}: ${obj}`)
+    }
+    return obj;
+}
+
+
 export default class EntityContainer {
     public static EVENT_MANAGER_NAME = 'ecs-event-manager'
     public id: string;
@@ -27,29 +39,29 @@ export default class EntityContainer {
     public getEventManager = (): EventManager => this.eventManager;
     public getContainerPrefix = (): string => this.containerPrefix;
 
-    public getComponentsByEntityId = <ComponentType extends ComponentInterface = Component>(id?: string, componentType: Function = Component): ComponentType[] => {
-        if (!id) {
+    public getComponentsByEntityId = <ComponentType>(id: string, componentType: Class<ComponentType>): ComponentType[] => {
+        if (id === "") {
             return [];
         }
 
-        return this.entityComponents[id].filter((component: ComponentInterface) => {
-            return component instanceof componentType;
-        }) as ComponentType[];
+        return this.entityComponents[id].filter(
+            _ => _ instanceof componentType
+        ) as ComponentType[];
     }
 
-    public getComponentByEntityId = <ComponentType extends ComponentInterface = Component>(id?: string, componentType: Function = Component): ComponentType | undefined =>
+    public getComponentByEntityId = <ComponentType>(id: string, componentType: Class<ComponentType>): ComponentType | undefined =>
         this.getComponentsByEntityId<ComponentType>(id, componentType)[0];
 
-    public getEntityComponents = <ComponentType extends ComponentInterface = Component>(entity: Entity, componentType: Function = Component): ComponentType[] =>
+    public getEntityComponents = <ComponentType>(entity: Entity, componentType: Class<ComponentType>): ComponentType[] =>
         this.getComponentsByEntityId<ComponentType>(entity.getId(), componentType);
 
-    public getEntityComponent = <ComponentType extends ComponentInterface = Component>(entity: Entity | string, componentType: Function = Component): ComponentType | undefined => {
+    public getEntityComponent = <ComponentType>(entity: Entity | string, componentType: Class<ComponentType>): ComponentType | undefined => {
         let entityId = entity instanceof Entity ? entity.getId() : entity;
 
         return this.getComponentByEntityId<ComponentType>(entityId, componentType);
     }
 
-    public getComponents = <ComponentType extends ComponentInterface = Component>(componentType: Function = Component): ComponentType[] =>
+    public getComponents = <ComponentType>(componentType: Class<ComponentType>): ComponentType[] =>
         (this.components[componentType.name] ? this.components[componentType.name] : []) as ComponentType[];
 
 
@@ -68,7 +80,7 @@ export default class EntityContainer {
     }
 
     public addEntity = (entity: Entity) => {
-        let id: string = entity.getId() ?? this.generateNewId();
+        let id: string = entity.getId() === "" ? this.generateNewId() : entity.getId();
 
         entity.getTags()?.forEach((tag: string) => {
             if (!this.taggedEntities[tag]) {
@@ -127,7 +139,7 @@ export default class EntityContainer {
             }
         });
 
-        let components = this.getComponentsByEntityId(entity.getId());
+        let components = this.getComponentsByEntityId(entity.getId(), Component);
         components.forEach(component => {
             this.removeComponent(component);
         });

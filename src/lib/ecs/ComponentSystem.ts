@@ -1,4 +1,4 @@
-import EntityContainer from "./EntityContainer";
+import EntityContainer, {Class} from "./EntityContainer";
 import {ComponentSystemInterface} from "./interfaces";
 import Entity from "./Entity";
 import React from "react";
@@ -19,7 +19,7 @@ export default class ComponentSystem implements ComponentSystemInterface {
         let field = this[fieldKey];
 
         if (field) {
-            this[fieldKey] = this.entityContainer.getEntityComponent(entity, field.constructor) as this[keyof this];
+            this[fieldKey] = this.entityContainer.getEntityComponent(entity, field.constructor as Class<typeof field>) as this[keyof this];
         }
     }
 

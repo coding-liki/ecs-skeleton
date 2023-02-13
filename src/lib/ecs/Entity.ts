@@ -1,13 +1,14 @@
 export default class Entity {
-  private id?: string
+  private id: string;
   private tags?: string[] = [];
 
   constructor(id?: string, tags?: string[]) {
-    this.id = id
+    this.id = id ? id : "";
+
     this.tags = tags;
   }
 
-    public getId = (): string | undefined => this.id;
+    public getId = (): string  => this.id;
     public setId = (id: string) => {
         this.id = id
     }

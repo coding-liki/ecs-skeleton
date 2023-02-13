@@ -10,8 +10,8 @@ import {
     Vector,
     Viewbox
 } from '../../lib'
-import {CameraComponent, MouseEventComponent, MousePositionComponent, HtmlElementComponent} from './components'
-import {MAIN_CAMERA, MAIN_MOUSE} from './constants'
+import {CameraComponent, HtmlElementComponent} from './components'
+import {MAIN_CAMERA} from './constants'
 
 type Props = {
     entityContainer: EntityContainer,
@@ -20,7 +20,7 @@ type Props = {
 
 type State = {}
 
-export default class EcsEditor extends React.Component<Props, State> {
+export default class EcsContainer extends React.Component<Props, State> {
     cameraComponent: CameraComponent = new CameraComponent;
     htmlElementComponent: HtmlElementComponent = new HtmlElementComponent;
     cameraEntity?: Entity;
@@ -33,17 +33,9 @@ export default class EcsEditor extends React.Component<Props, State> {
         this.cameraComponent.camera = new Camera(new Vector(0, 0, -1), new Viewbox(new Vector(0, 0), new Vector(500, 500)));
 
         this.refillCameraEntity();
-        this.refillMouseEntity();
     }
 
-    private refillMouseEntity = () => {
-        this.props.entityContainer.removeEntitiesWithTag(MAIN_MOUSE);
 
-        this.props.entityContainer.createEntity([
-            new MousePositionComponent,
-            new MouseEventComponent,
-        ], [MAIN_MOUSE]);
-    }
 
     private refillCameraEntity = () => {
         this.props.entityContainer.removeEntitiesWithTag(MAIN_CAMERA);
@@ -103,7 +95,7 @@ export default class EcsEditor extends React.Component<Props, State> {
             return;
         }
 
-        return <div id={"ecs-editor-root"} style={{
+        return <div id="ecs-container-root" style={{
             display: "flex",
             overflow: 'hidden'
         }}
@@ -111,9 +103,9 @@ export default class EcsEditor extends React.Component<Props, State> {
                         this.htmlElementComponent.element = div;
                     }}
         >
-            {this.props.systemContainer.getActive().map((system, key) => {
-                return <Fragment key={key}>{system.reactRender()}</Fragment>
-            })}
+            {this.props.systemContainer.getActive().map(
+                (system, key) => <Fragment key={key}>{system.reactRender()}</Fragment>
+            )}
         </div>;
     }
 }

@@ -1,12 +1,14 @@
 import EntityContainer from "./EntityContainer";
 import {TurnOffSystemByClass, TurnOffSystemByName, TurnOnSystemByClass, TurnOnSystemByName} from "./events";
-import {ComponentSystemInterface, SystemContainerInterface} from "./interfaces";
+import {
+    ComponentSystemConstructor,
+    ComponentSystemInterface,
+    SystemContainerInterface,
+    SystemTemplate
+} from "./interfaces";
 
 const NO_NAME = '';
 
-type ComponentSystemConstructor = {
-    new(entityContainer: EntityContainer, name: string): ComponentSystemInterface;
-};
 
 export default class SystemContainer implements SystemContainerInterface {
     private systemsByClass: { [key: string]: ComponentSystemInterface[] } = {};
@@ -73,11 +75,48 @@ export default class SystemContainer implements SystemContainerInterface {
         return this;
     }
 
+
+    public initSystemAfter = (className: ComponentSystemConstructor, after: Function | string, name: string = NO_NAME): SystemContainerInterface => {
+        let system = new className(this.entityContainer, name);
+        system.turnOn();
+
+        this.registerSystem(system, className, after);
+
+        this.refillActive();
+
+        return this;
+    }
+
+    public initSystemBefore = (className: ComponentSystemConstructor, before: Function | string, name: string = NO_NAME): SystemContainerInterface => {
+        let system = new className(this.entityContainer, name);
+        system.turnOn();
+
+        this.registerSystem(system, className, undefined, before);
+
+        this.refillActive();
+
+        return this;
+    }
+
+    public initTemplate = (systems: SystemTemplate[]): SystemContainerInterface => {
+        systems.forEach((system) => {
+            if (system.after) {
+                this.initSystemAfter(system.className, system.after, system.name);
+            } else if (system.before) {
+                this.initSystemAfter(system.className, system.before, system.name);
+            } else {
+                this.initSystem(system.className, system.name);
+            }
+        })
+
+        return this;
+    }
+
     private refillActive = () => {
         this.activeSystems = this.allSystems.filter((system) => system.isActive());
     }
 
-    private registerSystem = (system: ComponentSystemInterface, className: Function): void => {
+    private registerSystem = (system: ComponentSystemInterface, className: Function, after?: Function | string, before?: Function | string): void => {
         if (!this.systemsByClass[className.name]) {
             this.systemsByClass[className.name] = [];
         }
@@ -92,6 +131,24 @@ export default class SystemContainer implements SystemContainerInterface {
         }
 
         this.systemsByName[system.getName()] = system;
+
+        if (after) {
+            let systemBeforeCurrent = after instanceof Function ? this.getByClass(after)![0] : this.getByName(after);
+            if (systemBeforeCurrent) {
+                let systemBeforeIndex = this.allSystems.indexOf(systemBeforeCurrent!);
+                if (systemBeforeIndex >= 0 ?? !this.allSystems.includes(system)) {
+                    this.allSystems.splice(systemBeforeIndex + 1, 0, system);
+                }
+            }
+        } else if (before) {
+            let systemBeforeCurrent = before instanceof Function ? this.getByClass(before)![0] : this.getByName(before);
+            if (systemBeforeCurrent) {
+                let systemBeforeIndex = this.allSystems.indexOf(systemBeforeCurrent!);
+                if (systemBeforeIndex >= 0 ?? !this.allSystems.includes(system)) {
+                    this.allSystems.splice(systemBeforeIndex, 0, system);
+                }
+            }
+        }
 
         if (!this.allSystems.includes(system)) {
             this.allSystems.push(system);
