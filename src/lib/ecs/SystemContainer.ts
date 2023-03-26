@@ -63,8 +63,8 @@ export default class SystemContainer implements SystemContainerInterface {
         return systems[0] as SystemClass;
     }
 
-    public initSystem = (className: ComponentSystemConstructor, name: string = NO_NAME): SystemContainerInterface => {
-        let system = new className(this.entityContainer, name);
+    public initSystem = (className: ComponentSystemConstructor, name: string = NO_NAME, ...otherArgs: any[]): SystemContainerInterface => {
+        let system = new className(this.entityContainer, name, ...otherArgs);
 
         system.turnOn();
 
@@ -76,8 +76,8 @@ export default class SystemContainer implements SystemContainerInterface {
     }
 
 
-    public initSystemAfter = (className: ComponentSystemConstructor, after: Function | string, name: string = NO_NAME): SystemContainerInterface => {
-        let system = new className(this.entityContainer, name);
+    public initSystemAfter = (className: ComponentSystemConstructor, after: Function | string, name: string = NO_NAME,  ...otherArgs: any[]): SystemContainerInterface => {
+        let system = new className(this.entityContainer, name, ...otherArgs);
         system.turnOn();
 
         this.registerSystem(system, className, after);
@@ -87,8 +87,8 @@ export default class SystemContainer implements SystemContainerInterface {
         return this;
     }
 
-    public initSystemBefore = (className: ComponentSystemConstructor, before: Function | string, name: string = NO_NAME): SystemContainerInterface => {
-        let system = new className(this.entityContainer, name);
+    public initSystemBefore = (className: ComponentSystemConstructor, before: Function | string, name: string = NO_NAME,  ...otherArgs: any[]): SystemContainerInterface => {
+        let system = new className(this.entityContainer, name, ...otherArgs);
         system.turnOn();
 
         this.registerSystem(system, className, undefined, before);

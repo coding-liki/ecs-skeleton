@@ -22,7 +22,7 @@ export interface ComponentSystemInterface {
 }
 
 export type ComponentSystemConstructor = {
-    new(entityContainer: EntityContainer, name: string): ComponentSystemInterface;
+    new(entityContainer: EntityContainer, name: string, ...otherThings: any[]): ComponentSystemInterface;
 };
 
 export type SystemTemplate = {
