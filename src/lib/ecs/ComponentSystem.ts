@@ -1,7 +1,6 @@
 import EntityContainer, {Class} from "./EntityContainer";
 import {ComponentSystemInterface} from "./interfaces";
 import Entity from "./Entity";
-import React from "react";
 import {Event} from "@coding-liki/event-manager";
 
 interface eventCallback {
@@ -61,7 +60,7 @@ export default class ComponentSystem implements ComponentSystemInterface {
         return;
     }
 
-    public reactRender = (): React.ReactNode =>  undefined;
+    public renderComponent= (): any =>  undefined;
 
     public onMount = (): void => {
     }

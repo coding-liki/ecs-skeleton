@@ -1,4 +1,3 @@
-import React, {Fragment} from 'react'
 import {
     Camera,
     EndedRenderEvent,
@@ -13,21 +12,10 @@ import {
 import {CameraComponent, HtmlElementComponent} from './components'
 import {MAIN_CAMERA} from './constants'
 
-type Props = {
-    entityContainer: EntityContainer,
-    systemContainer: SystemContainerInterface
-}
-
-type State = {}
-
-export default class EcsContainer extends React.Component<Props, State> {
+export default class EcsContainer{
     cameraComponent: CameraComponent = new CameraComponent;
     htmlElementComponent: HtmlElementComponent = new HtmlElementComponent;
     cameraEntity?: Entity;
-
-    constructor(props: Props) {
-        super(props);
-    }
 
     init = () => {
         this.cameraComponent.camera = new Camera(new Vector(0, 0, -1), new Viewbox(new Vector(0, 0), new Vector(500, 500)));
@@ -36,76 +24,48 @@ export default class EcsContainer extends React.Component<Props, State> {
     }
 
 
+    constructor(private entityContainer: EntityContainer, private systemContainer: SystemContainerInterface) {
+    }
 
     private refillCameraEntity = () => {
-        this.props.entityContainer.removeEntitiesWithTag(MAIN_CAMERA);
+        this.entityContainer.removeEntitiesWithTag(MAIN_CAMERA);
 
-        this.cameraEntity = this.props.entityContainer.createEntity([
+        this.cameraEntity = this.entityContainer.createEntity([
             this.cameraComponent,
             this.htmlElementComponent
         ], [MAIN_CAMERA]);
     }
 
-    public componentDidMount = () => {
-        if (!this.props.entityContainer || !this.props.systemContainer) {
-            this.forceUpdate();
-
-            return;
-        }
-
+    public onMount = () => {
         this.init();
 
-        this.props.systemContainer.getAll().forEach((system) => {
+        this.systemContainer.getAll().forEach((system) => {
             system.onMount()
         })
 
-        if (!this.props.entityContainer) {
-            return;
-        }
-        this.props.entityContainer.getEventManager().subscribe(FullRerenderEvent, this.fullRerender);
-        this.props.entityContainer.getEventManager().subscribe(RerenderEvent, this.rerender);
-
-        this.forceUpdate();
+        this.entityContainer.getEventManager().subscribe(FullRerenderEvent, this.fullRerender);
+        this.entityContainer.getEventManager().subscribe(RerenderEvent, this.rerender);
     }
 
     public rerender = (event?: RerenderEvent) => {
-        this.props.systemContainer.getActive().forEach(system => system.render());
+        this.systemContainer.getActive().forEach(system => system.render());
 
-        this.props.entityContainer.getEventManager().dispatch(new EndedRenderEvent);
+        this.entityContainer.getEventManager().dispatch(new EndedRenderEvent);
     }
 
-    public componentWillUnmount = () => {
-        if (!this.props.entityContainer || !this.props.systemContainer) {
-            return;
-        }
-        this.props.systemContainer.getAll().forEach((system) => system.onUnMount());
+    public onUnmount = () => {
+        this.systemContainer.getAll().forEach((system) => system.onUnMount());
 
-        this.props.entityContainer.getEventManager().unsubscribe(FullRerenderEvent, this.fullRerender);
-        this.props.entityContainer.getEventManager().unsubscribe(RerenderEvent, this.rerender);
+        this.entityContainer.getEventManager().unsubscribe(FullRerenderEvent, this.fullRerender);
+        this.entityContainer.getEventManager().unsubscribe(RerenderEvent, this.rerender);
     }
 
-    public fullRerender = (event: FullRerenderEvent) => {
-        this.forceUpdate();
+    public fullRerender = (event?: FullRerenderEvent) => {
+        this.rerender();
+        this.renderComponents();
     }
 
-    public componentDidUpdate = (prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any): void => this.rerender();
-
-    public render = (): React.ReactNode => {
-        if (!this.props.entityContainer || !this.props.systemContainer) {
-            return;
-        }
-
-        return <div id="ecs-container-root" style={{
-            display: "flex",
-            overflow: 'hidden'
-        }}
-                    ref={(div: HTMLDivElement) => {
-                        this.htmlElementComponent.element = div;
-                    }}
-        >
-            {this.props.systemContainer.getActive().map(
-                (system, key) => <Fragment key={key}>{system.reactRender()}</Fragment>
-            )}
-        </div>;
+    public renderComponents = (): any => {
+        return this.systemContainer.getActive().map( (system) => system.renderComponent() );
     }
 }

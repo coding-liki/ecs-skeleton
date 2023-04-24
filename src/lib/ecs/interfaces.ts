@@ -1,4 +1,3 @@
-import React from "react";
 import EntityContainer from "./EntityContainer";
 
 export interface ComponentSystemInterface {
@@ -10,7 +9,7 @@ export interface ComponentSystemInterface {
 
     render(): void;
 
-    reactRender(): React.ReactNode;
+    renderComponent(): any;
 
     onMount(): void;
 
